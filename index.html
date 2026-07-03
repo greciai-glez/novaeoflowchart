@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NOVAEO — SC Process Map</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js"></script>
+<style>
+  :root{
+    --teal:#008080; --teal-deep:#065f5f; --teal-ink:#0d3d3d;
+    --teal-wash:#eaf4f4; --paper:#ffffff; --bg:#f2f5f5;
+    --ink:#1e2b2b; --ink-soft:#546969; --line:#d7e2e2;
+    --amber:#b45309; --amber-wash:#fdf3e7;
+    --red:#b3261e;  --red-wash:#fdeceb;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:var(--bg); color:var(--ink);
+    font:15px/1.55 "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+    padding:32px 16px 80px;
+  }
+  .wrap{max-width:1060px; margin:0 auto;}
+
+  .masthead{
+    background:var(--teal); color:#fff; border-radius:6px;
+    padding:26px 30px; margin-bottom:10px;
+  }
+  .masthead h1{
+    font-size:clamp(17px,2.6vw,24px); font-weight:600;
+    letter-spacing:.42em; text-transform:uppercase; line-height:1.5;
+  }
+  .masthead p{
+    margin-top:8px; font-size:13px; letter-spacing:.08em;
+    color:#cfe7e7;
+  }
+  .rule{border-bottom:2px solid var(--ink); margin:0 2px 22px;}
+
+  /* ---- how it fits together ---- */
+  .primer{
+    background:var(--paper); border:1px solid var(--line); border-left:4px solid var(--teal);
+    border-radius:6px; padding:16px 20px; margin-bottom:22px;
+  }
+  .primer h3{
+    font-size:11.5px; letter-spacing:.28em; text-transform:uppercase;
+    color:var(--teal-deep); margin-bottom:8px;
+  }
+  .primer p{font-size:13.5px; color:var(--ink); max-width:92ch;}
+  .primer .chain{
+    margin-top:10px; font-size:12.5px; color:var(--teal-ink); font-weight:600;
+    letter-spacing:.02em;
+  }
+  .primer .chain span{color:var(--ink-soft); font-weight:400;}
+
+  .toolbar{
+    display:flex; gap:10px; flex-wrap:wrap; align-items:center;
+    margin-bottom:22px;
+  }
+  .toolbar button{
+    border:1px solid var(--teal); background:var(--paper); color:var(--teal-deep);
+    font:600 12.5px/1 inherit; letter-spacing:.06em; text-transform:uppercase;
+    padding:9px 14px; border-radius:4px; cursor:pointer;
+  }
+  .toolbar button:hover{background:var(--teal-wash);}
+  .toolbar button:focus-visible{outline:2px solid var(--teal-deep); outline-offset:2px;}
+  .legend{
+    margin-left:auto; display:flex; gap:14px; flex-wrap:wrap;
+    font-size:12px; color:var(--ink-soft);
+  }
+  .legend span{display:inline-flex; align-items:center; gap:6px;}
+  .chip{width:12px; height:12px; border-radius:3px; display:inline-block; border:1.5px solid;}
+  .chip.p{background:#fff; border-color:var(--teal);}
+  .chip.d{background:var(--amber-wash); border-color:var(--amber); transform:rotate(45deg); border-radius:2px; width:10px; height:10px;}
+  .chip.c{background:var(--red-wash); border-color:var(--red);}
+  .chip.t{background:var(--teal); border-color:var(--teal-deep);}
+
+  section.block{
+    background:var(--paper); border:1px solid var(--line);
+    border-radius:6px; margin-bottom:14px; overflow:hidden;
+  }
+  .block > header{
+    display:flex; align-items:center; gap:14px;
+    background:var(--teal); color:#fff; cursor:pointer;
+    padding:13px 18px; user-select:none;
+  }
+  .block > header:focus-visible{outline:3px solid #7fd4d4; outline-offset:-3px;}
+  .block > header .num{
+    font-size:12px; font-weight:700; letter-spacing:.1em;
+    background:rgba(255,255,255,.16); padding:4px 8px; border-radius:3px;
+    white-space:nowrap;
+  }
+  .block > header h2{
+    font-size:13.5px; font-weight:600; letter-spacing:.32em; text-transform:uppercase;
+    flex:1; line-height:1.5;
+  }
+  .block > header .src{
+    font-size:11px; letter-spacing:.05em; color:#d5ecec; white-space:nowrap;
+  }
+  .block > header .chev{
+    transition:transform .25s ease; font-size:13px; line-height:1;
+  }
+  .block.open > header .chev{transform:rotate(90deg);}
+  .block .body{display:none; padding:18px 20px 24px;}
+  .block.open .body{display:block;}
+  .block .body > p.lead{
+    color:var(--ink-soft); font-size:13.5px; max-width:78ch; margin-bottom:14px;
+  }
+  .diagram{overflow-x:auto; padding:4px 0 2px;}
+  .diagram .mermaid{min-width:640px;}
+  .docs{
+    margin-top:16px; border-top:1px dashed var(--line); padding-top:12px;
+    font-size:12.5px; color:var(--ink-soft);
+  }
+  .docs strong{
+    display:block; color:var(--teal-ink); letter-spacing:.1em; font-size:11px;
+    text-transform:uppercase; margin-bottom:6px;
+  }
+  .docs ul{list-style:none; display:flex; flex-wrap:wrap; gap:6px 8px;}
+  .docs li{display:inline;}
+  .docs a{
+    display:inline-block; color:var(--teal-deep); text-decoration:none;
+    border:1px solid var(--teal); border-radius:20px; padding:4px 11px;
+    font-size:12px; background:#fff;
+  }
+  .docs a:hover{background:var(--teal-wash);}
+  .docs .pend{
+    display:inline-block; color:var(--amber); border:1px dashed var(--amber);
+    border-radius:20px; padding:4px 11px; font-size:12px; background:var(--amber-wash);
+  }
+  .overview-hint{font-size:12px; color:var(--ink-soft); margin-top:10px;}
+  @media (prefers-reduced-motion: reduce){
+    .block > header .chev{transition:none;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="masthead">
+    <h1>Supply Chain Process Map</h1>
+    <p>NOVAEO, LLC · Receiving → Inventory → Discrepancy → Reporting · Living document</p>
+  </div>
+  <div class="rule"></div>
+
+  <div class="primer">
+    <h3>How it all fits together</h3>
+    <p>Inventory accuracy is a single loop. Every receipt logged at the dock <em>adds</em> to theoretical inventory; every manufacturing order and shipment <em>deducts</em> from it. Each Monday, physical cycle counts compare that theory against reality. Any gap becomes a tracked discrepancy that must be recounted, root-caused, approved, and adjusted — never silently absorbed. Critical cases (high value, organic, or suspected mix-ups) escalate to incident and organic-integrity controls. Weekly reporting turns closed cases into preventive actions, which feed back into how we receive, store, and count.</p>
+    <p class="chain">Receive <span>→</span> Calculate <span>→</span> Count <span>→</span> Investigate <span>→</span> Adjust <span>→</span> Report <span>→ back to</span> Receive</p>
+  </div>
+
+  <div class="toolbar">
+    <button id="expandAll" type="button">Expand all</button>
+    <button id="collapseAll" type="button">Collapse all</button>
+    <div class="legend">
+      <span><i class="chip p"></i>Action</span>
+      <span><i class="chip d"></i>Decision</span>
+      <span><i class="chip c"></i>Critical / escalation</span>
+      <span><i class="chip t"></i>Start / end</span>
+    </div>
+  </div>
+
+  <!-- ============ 00 OVERVIEW ============ -->
+  <section class="block open" id="sec-overview">
+    <header tabindex="0" role="button" aria-expanded="true">
+      <span class="num">00</span>
+      <h2>Overview</h2>
+      <span class="src">all stages</span>
+      <span class="chev">&#9654;</span>
+    </header>
+    <div class="body">
+      <p class="lead">The full inventory control cycle. Click any stage to open its detailed section.</p>
+      <div class="diagram"><pre class="mermaid" data-rendered="false">
+flowchart LR
+    R["01 RECEIVING<br/>Inspect, verify, log,<br/>lot number, store"]:::stage --> T["02 THEORETICAL<br/>INVENTORY<br/>Receipts + production<br/>&minus; usage &minus; FO/IHF"]:::stage
+    T --> CC["03 CYCLE COUNT<br/>Monday actual counts<br/>Diff = Actual &minus; Theo"]:::stage
+    CC --> DL["04 DISCREPANCY<br/>Classify, log, recount,<br/>root cause, adjust"]:::stage
+    DL -->|Critical /<br/>organic| ES["05 ESCALATION<br/>Incident Report, QA Hold,<br/>Organic Integrity"]:::crit
+    DL --> RP["06 REPORT & KPIs<br/>Weekly SC Report,<br/>IRA, SLA, repeats"]:::stage
+    ES --> RP
+    RP -.->|preventive<br/>actions| R
+    click R call openSection("sec-receiving")
+    click T call openSection("sec-theoretical")
+    click CC call openSection("sec-cyclecount")
+    click DL call openSection("sec-discrepancy")
+    click ES call openSection("sec-escalation")
+    click RP call openSection("sec-report")
+    classDef stage fill:#ffffff,stroke:#008080,stroke-width:2px,color:#0d3d3d;
+    classDef crit fill:#fdeceb,stroke:#b3261e,stroke-width:2px,color:#7a1a15;
+      </pre></div>
+      <p class="overview-hint">Every node is clickable · Dotted lines are feedback loops.</p>
+    </div>
+  </section>
+
+  <!-- ============ 01 RECEIVING ============ -->
+  <section class="block" id="sec-receiving">
+    <header tabindex="0" role="button" aria-expanded="false">
+      <span class="num">01</span>
+      <h2>Receiving</h2>
+      <span class="src">Product Receiving SOP · SOP-000</span>
+      <span class="chev">&#9654;</span>
+    </header>
+    <div class="body">
+      <p class="lead">Everything entering the warehouse: inspection before signing, document and organic verification, same-day entry in the Receiving Log, internal lot numbering, and segregated storage.</p>
+      <div class="diagram"><pre class="mermaid" data-rendered="false">
+flowchart TD
+    A["Prepare for delivery<br/>Check PO Tracker · clear quarantine area"]:::proc --> B["Delivery arrives<br/>Inspect packaging BEFORE signing"]:::proc
+    B --> C{"Packaging OK?<br/>sealed · no damage · no pests<br/>case count matches BOL"}:::dec
+    C -->|FAIL| Q["STOP &rarr; Receiving Quarantine<br/>Photograph · notify QA · QA Hold"]:::crit
+    Q --> QD{"QA decision"}:::dec
+    QD -->|Reject| RJ["Return / dispose<br/>S&P contacts supplier"]:::crit
+    QD -->|Accept| V
+    C -->|PASS| V["Verify labels & documents match<br/>name vs PO · lot vs COA/BOL/invoice · supplier · qty"]:::proc
+    V --> O{"Organic item?"}:::dec
+    O -->|Yes| OV["Organic verification<br/>certificate on file · H4 approved list<br/>separate pallets, off ground"]:::proc
+    OV --> OK{"Verified?"}:::dec
+    OK -->|No / unsure| Q
+    OK -->|Yes| L
+    O -->|No| L["Record in Receiving Log SAME DAY<br/>10 fields incl. Actual Qty vs Expected Qty"]:::proc
+    L --> LOT["Assign internal lot number<br/>MMDDYY + letter · apply receiving label"]:::proc
+    LOT --> M{"Actual = Expected?"}:::dec
+    M -->|No| DX["Record Actual AS FOUND<br/>Open Discrepancy Log row &rarr; section 04<br/>Notify S&P"]:::crit
+    DX --> S
+    M -->|Yes| S["Store in designated zone<br/>pallets off ground · organic segregated"]:::proc
+    S --> F["File documents<br/>Scan to Drive · link + highlight in log<br/>organic cabinet by month"]:::proc
+    F --> Z(["Receipt feeds theoretical inventory"]):::term
+    classDef proc fill:#ffffff,stroke:#008080,stroke-width:1.6px,color:#1e2b2b;
+    classDef dec fill:#fdf3e7,stroke:#b45309,stroke-width:1.6px,color:#5b2c05;
+    classDef crit fill:#fdeceb,stroke:#b3261e,stroke-width:1.6px,color:#7a1a15;
+    classDef term fill:#008080,stroke:#065f5f,color:#ffffff;
+      </pre></div>
+      <div class="docs"><strong>Documents</strong>
+        <ul>
+          <li><span class="pend">Product Receiving SOP — drafted, pending upload to Drive</span></li>
+          <li><a href="https://docs.google.com/document/d/1dloV0F9X5Qmfo9BNCsPA0rGWluTYAFngLwULiJ16Ud0/edit" target="_blank" rel="noopener">Organic Compliance Training Guide</a></li>
+          <li><a href="https://docs.google.com/spreadsheets/d/1sL4xGiaWcmzl7RzdBHREzICbnBLjDUJZ_1r_-15FbGo/edit?gid=239813818" target="_blank" rel="noopener">Receiving and Dispatch Log</a></li>
+          <li><a href="https://docs.google.com/document/d/1GzycJEYTOIVdDm1sy1neSmHIgjx_Z1M_xTT_giLD8e8/edit" target="_blank" rel="noopener">Pre-Mock Audit Warehouse Checklist</a></li>
+          <li><a href="https://drive.google.com/drive/u/0/folders/11tMdNGVmAnoqQiB4Es5hhHgxDGrivVQD" target="_blank" rel="noopener">Supplier Certificates folder</a></li>
+          <li><a href="https://docs.google.com/spreadsheets/d/1qWmfUzNYgLFtQuZi9j4pu829Knb0xsDM/edit?gid=1776177308" target="_blank" rel="noopener">H4 Approved Supplier List</a></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 02 THEORETICAL INVENTORY ============ -->
+  <section class="block" id="sec-theoretical">
+    <header tabindex="0" role="button" aria-expanded="false">
+      <span class="num">02</span>
+      <h2>Theoretical Inventory</h2>
+      <span class="src">Inventory Calculation SOP · rev. 03/2025</span>
+      <span class="chev">&#9654;</span>
+    </header>
+    <div class="body">
+      <p class="lead">How the theoretical quantity in Warehouse Inventory Report v2 is calculated: what adds, what deducts, and why Date Counted is the cutoff.</p>
+      <div class="diagram"><pre class="mermaid" data-rendered="false">
+flowchart TD
+    RL["Receiving Log<br/>Actual Qty received"]:::src -->|"+ adds"| THEO["THEORETICAL QTY<br/>Warehouse Inventory Report v2<br/>RawInventory · PackagingBOMs · FG"]:::core
+    MO["MO and FO Log<br/>Gross Produced"]:::src -->|"&minus; deducts RM/PKG<br/>MO qty &times; BOM mapping"| THEO
+    MAP["ASIN Master<br/>BOM Mapping tab"]:::src -.->|"qty per unit"| MO
+    MO -->|"+ adds FG<br/>Gross Produced"| THEO
+    SHIP["MO and FO Log<br/>Actual Shipped Qty (FO)"]:::src -->|"&minus; deducts FG"| THEO
+    GIMS["G-IMS Shipstation tab<br/>IHF line items"]:::src -->|"&minus; deducts FG"| THEO
+    CNT["Actual Count + Date Counted<br/>(from cycle count)"]:::proc -->|"resets baseline:<br/>only transactions AFTER<br/>Date Counted apply"| THEO
+    THEO --> DIFF(["Feeds Diff in Cycle Count Monitoring"]):::term
+    classDef src fill:#eaf4f4,stroke:#008080,stroke-width:1.6px,color:#0d3d3d;
+    classDef core fill:#ffffff,stroke:#065f5f,stroke-width:2.4px,color:#0d3d3d;
+    classDef proc fill:#ffffff,stroke:#008080,stroke-width:1.6px,color:#1e2b2b;
+    classDef term fill:#008080,stroke:#065f5f,color:#ffffff;
+      </pre></div>
+      <div class="docs"><strong>Documents</strong>
+        <ul>
+          <li><a href="https://docs.google.com/document/d/1Xu9gXyZaDroBeDAvpPfSAEqUbB_CGBCdLtMXrbaeh1U/edit" target="_blank" rel="noopener">Inventory Calculation SOP</a></li>
+          <li><a href="https://docs.google.com/spreadsheets/d/1m2RvQ-l1KWe4ur3IJCum8b3uq6MwcZpdThUtDXwxvQ8/edit" target="_blank" rel="noopener">Warehouse Inventory Report v2</a></li>
+          <li><a href="https://docs.google.com/spreadsheets/d/1fU2nZxSgLie6fVRrj4L6-UHi19DsL3ZVwS8UqTlChaY/edit" target="_blank" rel="noopener">MO and FO Log</a></li>
+          <li><a href="https://docs.google.com/spreadsheets/d/1mxNB4-gbW90rDog3xxU2DFhWU-v6-kWBwE2VamR-0To/edit?gid=1057838481" target="_blank" rel="noopener">ASIN Master — Mapping</a></li>
+          <li><a href="https://docs.google.com/spreadsheets/d/1MhAxueMqd20lJCFWXfCdSwTRaVgdC6woW0I82PP8IbQ/edit?gid=126266759" target="_blank" rel="noopener">G-IMS — Shipstation</a></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 03 CYCLE COUNT ============ -->
+  <section class="block" id="sec-cyclecount">
+    <header tabindex="0" role="button" aria-expanded="false">
+      <span class="num">03</span>
+      <h2>Cycle Count &amp; Detection</h2>
+      <span class="src">Cycle Count Monitoring · Mondays</span>
+      <span class="chev">&#9654;</span>
+    </header>
+    <div class="body">
+      <p class="lead">The four points where discrepancies are detected. The Monday cycle count is the main one, but receiving, production, and stockouts also feed section 04.</p>
+      <div class="diagram"><pre class="mermaid" data-rendered="false">
+flowchart TD
+    CC["Monday cycle count<br/>record Actual Count"]:::proc --> DIFF["Diff = Actual &minus; Theoretical<br/>Cycle Count Monitoring"]:::core
+    RV["Receiving<br/>Actual vs Expected Qty"]:::src --> DET
+    BPR["BPR closeout<br/>Actual Used vs BOM standard"]:::src --> DET
+    MOFO["MO/FO reconciliation<br/>Plan vs Actual · Produced vs Shipped"]:::src --> DET
+    SO["Stockout Log<br/>system shows stock, shelf empty"]:::src --> DET
+    DIFF --> DET{"Any variance<br/>detected?"}:::dec
+    DET -->|No| OKK(["Counts match — baseline resets"]):::term
+    DET -->|Yes| GO(["&rarr; 04 Discrepancy workflow"]):::term
+    classDef proc fill:#ffffff,stroke:#008080,stroke-width:1.6px,color:#1e2b2b;
+    classDef core fill:#ffffff,stroke:#065f5f,stroke-width:2.4px,color:#0d3d3d;
+    classDef src fill:#eaf4f4,stroke:#008080,stroke-width:1.6px,color:#0d3d3d;
+    classDef dec fill:#fdf3e7,stroke:#b45309,stroke-width:1.6px,color:#5b2c05;
+    classDef term fill:#008080,stroke:#065f5f,color:#ffffff;
+      </pre></div>
+      <div class="docs"><strong>Documents</strong>
+        <ul>
+          <li><a href="https://docs.google.com/spreadsheets/d/1Kq3vM3mBQtOqn5YTdffac6dPiRE5PonHUrc1j4CgdQ4/edit" target="_blank" rel="noopener">Cycle Count Monitoring</a></li>
+          <li><a href="https://docs.google.com/spreadsheets/d/1sL4xGiaWcmzl7RzdBHREzICbnBLjDUJZ_1r_-15FbGo/edit?gid=239813818" target="_blank" rel="noopener">Receiving and Dispatch Log</a></li>
+          <li><a href="https://docs.google.com/spreadsheets/d/1fU2nZxSgLie6fVRrj4L6-UHi19DsL3ZVwS8UqTlChaY/edit" target="_blank" rel="noopener">MO and FO Log</a></li>
+          <li><span class="pend">BPR Actual Used BOMs — pending link</span></li>
+          <li><span class="pend">Stockout Log — pending link</span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 04 DISCREPANCY ============ -->
+  <section class="block" id="sec-discrepancy">
+    <header tabindex="0" role="button" aria-expanded="false">
+      <span class="num">04</span>
+      <h2>Discrepancy</h2>
+      <span class="src">Inventory Discrepancy Tracking SOP · SOP-0001</span>
+      <span class="chev">&#9654;</span>
+    </header>
+    <div class="body">
+      <p class="lead">Classify by severity, log in the Discrepancy Log, recount within 24 hours, investigate root cause, and adjust only with approval.</p>
+      <div class="diagram"><pre class="mermaid" data-rendered="false">
+flowchart TD
+    IN(["Variance detected — 03"]):::term --> VAL["Calculate Diff $ value<br/>units &times; unit cost (iSKU Master)"]:::proc
+    VAL --> SEV{"Classify severity"}:::dec
+    SEV -->|"Within tolerance<br/>&le;2% AND &le;$50"| TA["Log + adjust<br/>no investigation"]:::proc
+    TA --> CL(["Close row"]):::term
+    SEV -->|"Low / Medium / High"| LOG["Log in Discrepancy Log<br/>DISC-MMDDYY-##"]:::proc
+    SEV -->|"Critical: >$2,500 · organic<br/>· suspected mix-up"| CR["Log + &rarr; 05 Escalation"]:::crit
+    LOG --> RC["Recount within 24 h<br/>second person · adjacent bins<br/>alternate label codes"]:::proc
+    RC --> RM{"Recount matches<br/>theoretical?"}:::dec
+    RM -->|Yes| CLT["Close as Data Entry/Timing<br/>or Mislocation"]:::proc
+    CLT --> CL
+    RM -->|No| INV["Investigate root cause, in order:<br/>Receiving Log &rarr; MO/FO Log &rarr;<br/>BPR Actual Used &rarr; G-IMS Shipstation"]:::proc
+    CR --> INV
+    INV --> CAT["Assign root cause category<br/>+ corrective + preventive action"]:::proc
+    CAT --> AP{"Approval per severity"}:::dec
+    AP -->|"Medium: IM Manager"| ADJ
+    AP -->|"High: WH Manager"| ADJ["Post adjustment in WH Inventory v2<br/>update count + Date Counted"]:::proc
+    ADJ --> CL
+    CL --> RPT(["&rarr; 06 Report & Trend"]):::term
+    classDef proc fill:#ffffff,stroke:#008080,stroke-width:1.6px,color:#1e2b2b;
+    classDef dec fill:#fdf3e7,stroke:#b45309,stroke-width:1.6px,color:#5b2c05;
+    classDef crit fill:#fdeceb,stroke:#b3261e,stroke-width:1.6px,color:#7a1a15;
+    classDef term fill:#008080,stroke:#065f5f,color:#ffffff;
+      </pre></div>
+      <div class="docs"><strong>Documents</strong>
+        <ul>
+          <li><a href="https://drive.google.com/file/d/14W0N-fx25Rb7vC_0d41XCI6qbHW0NUJC/view" target="_blank" rel="noopener">Inventory Discrepancy Tracking &amp; Resolution SOP</a></li>
+          <li><a href="https://docs.google.com/spreadsheets/d/1Kq3vM3mBQtOqn5YTdffac6dPiRE5PonHUrc1j4CgdQ4/edit" target="_blank" rel="noopener">Cycle Count Monitoring</a></li>
+          <li><span class="pend">Discrepancy Log tab — to be built</span></li>
+          <li><span class="pend">iSKU Master — pending link</span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 05 ESCALATION ============ -->
+  <section class="block" id="sec-escalation">
+    <header tabindex="0" role="button" aria-expanded="false">
+      <span class="num">05</span>
+      <h2>Critical Escalation &amp; Organic</h2>
+      <span class="src">Incident Report · Americert / USDA NOP</span>
+      <span class="chev">&#9654;</span>
+    </header>
+    <div class="body">
+      <p class="lead">What happens when a discrepancy is Critical: over $2,500, any organic item, or suspected cross-contamination or product mix-up.</p>
+      <div class="diagram"><pre class="mermaid" data-rendered="false">
+flowchart TD
+    IN(["Critical discrepancy — 04"]):::term --> IR["File Incident Report Form<br/>+ enter in Incident Tracking System"]:::crit
+    IR --> QA{"Product integrity<br/>in question?"}:::dec
+    QA -->|Yes| HOLD["QA Hold<br/>block material from storage or use"]:::crit
+    QA -->|No| ORG
+    HOLD --> ORG{"Organic item?"}:::dec
+    ORG -->|Yes| OIL["Update Organic Integrity Log<br/>+ Mass Balance<br/>protect Americert certification"]:::crit
+    ORG -->|No| RES
+    OIL --> RES["Resolve with QA / SC Lead<br/>release, return, or dispose"]:::proc
+    RES --> BACK(["&rarr; back to 04 root cause & closure"]):::term
+    classDef proc fill:#ffffff,stroke:#008080,stroke-width:1.6px,color:#1e2b2b;
+    classDef dec fill:#fdf3e7,stroke:#b45309,stroke-width:1.6px,color:#5b2c05;
+    classDef crit fill:#fdeceb,stroke:#b3261e,stroke-width:1.6px,color:#7a1a15;
+    classDef term fill:#008080,stroke:#065f5f,color:#ffffff;
+      </pre></div>
+      <div class="docs"><strong>Documents</strong>
+        <ul>
+          <li><a href="https://drive.google.com/file/d/1R8Pde7fbcKHUlwu1Pz-6PYRTnh1KMU8Z/view" target="_blank" rel="noopener">Incident Report Form</a></li>
+          <li><a href="https://greciai-glez.github.io/incident-tracker/index.html" target="_blank" rel="noopener">Incident Tracking System</a></li>
+          <li><a href="https://docs.google.com/document/d/1dloV0F9X5Qmfo9BNCsPA0rGWluTYAFngLwULiJ16Ud0/edit" target="_blank" rel="noopener">Organic Compliance Training Guide</a></li>
+          <li><span class="pend">Organic Integrity Log — pending link</span></li>
+          <li><span class="pend">Mass Balance — pending link</span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 06 REPORT ============ -->
+  <section class="block" id="sec-report">
+    <header tabindex="0" role="button" aria-expanded="false">
+      <span class="num">06</span>
+      <h2>Report &amp; KPIs</h2>
+      <span class="src">Weekly SC Report · SC Weekly KPIs</span>
+      <span class="chev">&#9654;</span>
+    </header>
+    <div class="body">
+      <p class="lead">Closing the loop: weekly trends, monthly repeat-offender review, and the three KPIs that measure system health.</p>
+      <div class="diagram"><pre class="mermaid" data-rendered="false">
+flowchart TD
+    IN(["Closed rows — 04/05"]):::term --> WK["Weekly SC Report<br/>by severity · total $ variance<br/>top 3 root causes · aging >7 days"]:::proc
+    WK --> RE{"Same BOM twice<br/>in 60 days?"}:::dec
+    RE -->|Yes| PA["Mandatory preventive action<br/>SOP change · label fix · training"]:::crit
+    RE -->|No| KPI
+    PA --> KPI["SC Weekly KPIs<br/>IRA &ge;95% · closed in SLA &ge;90%<br/>repeat rate &le;5%"]:::proc
+    KPI --> LOOP(["Preventive actions feed back<br/>into 01 Receiving & 03 Counts"]):::term
+    classDef proc fill:#ffffff,stroke:#008080,stroke-width:1.6px,color:#1e2b2b;
+    classDef dec fill:#fdf3e7,stroke:#b45309,stroke-width:1.6px,color:#5b2c05;
+    classDef crit fill:#fdeceb,stroke:#b3261e,stroke-width:1.6px,color:#7a1a15;
+    classDef term fill:#008080,stroke:#065f5f,color:#ffffff;
+      </pre></div>
+      <div class="docs"><strong>Documents</strong>
+        <ul>
+          <li><span class="pend">Weekly SC Report — pending link</span></li>
+          <li><span class="pend">SC Weekly KPIs — pending link</span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+  mermaid.initialize({
+    startOnLoad:false,
+    securityLevel:'loose',
+    theme:'base',
+    themeVariables:{
+      fontFamily:'"Segoe UI", system-ui, Arial, sans-serif',
+      fontSize:'13px',
+      primaryColor:'#ffffff',
+      primaryBorderColor:'#008080',
+      primaryTextColor:'#1e2b2b',
+      lineColor:'#546969',
+      edgeLabelBackground:'#f2f5f5'
+    },
+    flowchart:{curve:'basis', htmlLabels:true, useMaxWidth:true}
+  });
+
+  function renderIn(section){
+    section.querySelectorAll('.mermaid[data-rendered="false"]').forEach(function(el){
+      el.setAttribute('data-rendered','true');
+      mermaid.run({nodes:[el]});
+    });
+  }
+
+  function setOpen(section, open){
+    section.classList.toggle('open', open);
+    var h = section.querySelector('header');
+    h.setAttribute('aria-expanded', open ? 'true' : 'false');
+    if(open) renderIn(section);
+  }
+
+  window.openSection = function(id){
+    var s = document.getElementById(id);
+    if(!s) return;
+    setOpen(s, true);
+    s.scrollIntoView({behavior:'smooth', block:'start'});
+  };
+
+  document.querySelectorAll('section.block > header').forEach(function(h){
+    var s = h.parentElement;
+    h.addEventListener('click', function(){ setOpen(s, !s.classList.contains('open')); });
+    h.addEventListener('keydown', function(e){
+      if(e.key==='Enter' || e.key===' '){ e.preventDefault(); setOpen(s, !s.classList.contains('open')); }
+    });
+  });
+
+  document.getElementById('expandAll').addEventListener('click', function(){
+    document.querySelectorAll('section.block').forEach(function(s){ setOpen(s, true); });
+  });
+  document.getElementById('collapseAll').addEventListener('click', function(){
+    document.querySelectorAll('section.block').forEach(function(s){
+      if(s.id!=='sec-overview') setOpen(s, false);
+    });
+  });
+
+  renderIn(document.getElementById('sec-overview'));
+</script>
+</body>
+</html>
