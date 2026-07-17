@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NOVAEO — SC Process Map</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js"></script>
+<style>
+  :root{
+    --teal:#008080; --teal-deep:#065f5f; --teal-ink:#0d3d3d;
+    --teal-wash:#eaf4f4; --paper:#ffffff; --bg:#f2f5f5;
+    --ink:#1e2b2b; --ink-soft:#546969; --line:#d7e2e2;
+    --amber:#b45309; --amber-wash:#fdf3e7;
+    --red:#b3261e;  --red-wash:#fdeceb;
+    --ghost:#9fb3b3; --ghost-wash:#fafcfc;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:var(--bg); color:var(--ink);
+    font:15px/1.55 "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+    padding:32px 16px 80px;
+  }
+  .wrap{max-width:1060px; margin:0 auto;}
+
+  .masthead{
+    background:var(--teal); color:#fff; border-radius:6px;
+    padding:26px 30px; margin-bottom:10px;
+  }
+  .masthead h1{
+    font-size:clamp(17px,2.6vw,24px); font-weight:600;
+    letter-spacing:.42em; text-transform:uppercase; line-height:1.5;
+  }
+  .masthead p{
+    margin-top:8px; font-size:13px; letter-spacing:.08em;
+    color:#cfe7e7;
+  }
+  .rule{border-bottom:2px solid var(--ink); margin:0 2px 22px;}
+
+  /* ---- how it fits together ---- */
+  .primer{
+    background:var(--paper); border:1px solid var(--line); border-left:4px solid var(--teal);
+    border-radius:6px; padding:16px 20px; margin-bottom:22px;
+  }
+  .primer h3{
+    font-size:11.5px; letter-spacing:.28em; text-transform:uppercase;
+    color:var(--teal-deep); margin-bottom:8px;
+  }
+  .primer p{font-size:13.5px; color:var(--ink); max-width:92ch;}
+  .primer .chain{
+    margin-top:10px; font-size:12.5px; color:var(--teal-ink); font-weight:600;
+    letter-spacing:.02em;
+  }
+  .primer .chain span{color:var(--ink-soft); font-weight:400;}
+
+  .toolbar{
+    display:flex; gap:10px; flex-wrap:wrap; align-items:center;
+    margin-bottom:22px;
+  }
+  .toolbar button{
+    border:1px solid var(--teal); background:var(--paper); color:var(--teal-deep);
+    font:600 12.5px/1 inherit; letter-spacing:.06em; text-transform:uppercase;
+    padding:9px 14px; border-radius:4px; cursor:pointer;
+  }
+  .toolbar button:hover{background:var(--teal-wash);}
+  .toolbar button:focus-visible{outline:2px solid var(--teal-deep); outline-offset:2px;}
+  .legend{
+    margin-left:auto; display:flex; gap:14px; flex-wrap:wrap;
+    font-size:12px; color:var(--ink-soft);
+  }
+  .legend span{display:inline-flex; align-items:center; gap:6px;}
+  .chip{width:12px; height:12px; border-radius:3px; display:inline-block; border:1.5px solid;}
+  .chip.p{background:#fff; border-color:var(--teal);}
+  .chip.d{background:var(--amber-wash); border-color:var(--amber); transform:rotate(45deg); border-radius:2px; width:10px; height:10px;}
+  .chip.c{background:var(--red-wash); border-color:var(--red);}
+  .chip.t{background:var(--teal); border-color:var(--teal-deep);}
+  .chip.g{background:var(--ghost-wash); border-color:var(--ghost); border-style:dashed;}
+
+  section.block{
+    background:var(--paper); border:1px solid var(--line);
+    border-radius:6px; margin-bottom:14px; overflow:hidden;
+  }
+  .block > header{
+    display:flex; align-items:center; gap:14px;
+    background:var(--teal); color:#fff; cursor:pointer;
+    padding:13px 18px; user-select:none;
+  }
+  .block > header:focus-visible{outline:3px solid #7fd4d4; outline-offset:-3px;}
+  .block > header .num{
+    font-size:12px; font-weight:700; letter-spacing:.1em;
+    background:rgba(255,255,255,.16); padding:4px 8px; border-radius:3px;
+    white-space:nowrap;
+  }
+  .block > header h2{
+    font-size:13.5px; font-weight:600; letter-spacing:.32em; text-transform:uppercase;
+    flex:1; line-height:1.5;
+  }
+  .block > header .src{
+    font-size:11px; letter-spacing:.05em; color:#d5ecec; white-space:nowrap;
+  }
+  .block > header .chev{
+    transition:transform .25s ease; font-size:13px; line-height:1;
+  }
+  .block.open > header .chev{transform:rotate(90deg);}
+  .block .body{display:none; padding:18px 20px 24px;}
+  .block.open .body{display:block;}
+  .block .body > p.lead{
+    color:var(--ink-soft); font-size:13.5px; max-width:78ch; margin-bottom:6px;
+  }
+  .roles{
+    font-size:12px; color:var(--teal-deep); letter-spacing:.04em;
+    margin-bottom:14px;
+  }
+  .roles strong{
+    letter-spacing:.14em; font-size:10.5px; text-transform:uppercase;
+    color:var(--teal-ink); margin-right:6px;
+  }
+  .diagram{overflow-x:auto; padding:4px 0 2px;}
+  .diagram .mermaid{min-width:640px;}
+  .subhead{
+    font-size:11px; letter-spacing:.24em; text-transform:uppercase;
+    color:var(--teal-deep); margin:18px 0 6px;
+    border-top:1px dashed var(--line); padding-top:14px;
+  }
+  .docs{
+    margin-top:16px; border-top:1px dashed var(--line); padding-top:12px;
+    font-size:12.5px; color:var(--ink-soft);
+  }
+  .docs strong{
+    display:block; color:var(--teal-ink); letter-spacing:.1em; font-size:11px;
+    text-transform:uppercase; margin-bottom:6px;
+  }
+  .docs ul{list-style:none; display:flex; flex-wrap:wrap; gap:6px 8px;}
+  .docs li{display:inline;}
+  .docs a{
+    display:inline-block; color:var(--teal-deep); text-decoration:none;
+    border:1px solid var(--teal); border-radius:20px; padding:4px 11px;
+    font-size:12px; background:#fff;
+  }
+  .docs a:hover{background:var(--teal-wash);}
+  .docs .pend{
+    display:inline-block; color:var(--amber); border:1px dashed var(--amber);
+    border-radius:20px; padding:4px 11px; font-size:12px; background:var(--amber-wash);
+  }
+  .docs .ghost{
+    display:inline-block; color:var(--ink-soft); border:1px dashed var(--ghost);
+    border-radius:20px; padding:4px 11px; font-size:12px; background:var(--ghost-wash);
+  }
+  .overview-hint{font-size:12px; color:var(--ink-soft); margin-top:10px;}
+  @media (prefers-reduced-motion: reduce){
+    .block > header .chev{transition:none;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="masthead">
+    <h1>Supply Chain Process Map</h1>
+    <p>NOVAEO, LLC · Sourcing → Receiving → Inventory → Production → QA → Fulfillment → Customer Service · Living document</p>
+  </div>
+  <div class="rule"></div>
+
+  <div class="primer">
+    <h3>How it all fits together</h3>
+    <p>The supply chain is one continuous loop. Sourcing places verified purchase orders; every receipt logged at the dock adds to theoretical inventory; staging and production consume it against BPRs and add finished goods back; QA and organic controls gate every step; fulfillment deducts what ships; and customer service in Gorgias closes the loop — complaints and returns feed investigations, incidents, and the weekly report, whose preventive actions flow back into how we source, receive, count, and produce. Nothing is silently absorbed: every variance, hold, complaint, and return has an owner, a log, and a closure path. The MOFO Board (Baserow), displayed on the warehouse screen, shows each day’s pending MOs and FOs; marking an order COMPLETED in the app is what closes it out of the next day’s pending list.</p>
+    <p class="chain">Source <span>→</span> Receive <span>→</span> Count <span>→</span> Stage <span>→</span> Produce <span>→</span> Verify <span>→</span> Ship <span>→</span> Support <span>→ back to</span> Source</p>
+  </div>
+
+  <div class="toolbar">
+    <button id="expandAll" type="button">Expand all</button>
+    <button id="collapseAll" type="button">Collapse all</button>
+    <div class="legend">
+      <span><i class="chip p"></i>Action</span>
+      <span><i class="chip d"></i>Decision</span>
+      <span><i class="chip c"></i>Critical / escalation</span>
+      <span><i class="chip t"></i>Start / end</span>
+      <span><i class="chip g"></i>Planned</span>
+    </div>
+  </div>
+
+  <!-- ============ 00 OVERVIEW ============ -->
+  <section class="block open" id="sec-overview">
+    <header tabindex="0" role="button" aria-expanded="true">
+      <span class="num">00</span>
+      <h2>Overview</h2>
+      <span class="src">all stages</span>
+      <span class="chev">&#9654;</span>
+    </header>
+    <div class="body">
+      <p class="lead">The full end-to-end chain, from purchase order to customer resolution. Click any stage to open its detailed section.</p>
+      <div class="diagram"><pre class="mermaid" data-rendered="false">
+flowchart LR
+    SRC["01 SOURCING &amp;<br/>PROCUREMENT<br/>PO · supplier verification"]:::stage --> R["02 RECEIVING<br/>Inspect, verify, log,<br/>lot number, store"]:::stage
+    R --> T["03 THEORETICAL<br/>INVENTORY<br/>Receipts + production<br/>&minus; usage &minus; FO/IHF"]:::stage
+    T --> CC["04 CYCLE COUNT<br/>Monday actual counts<br/>Diff = Actual &minus; Theo"]:::stage
+    CC --> DL["05 DISCREPANCY<br/>Classify, log, recount,<br/>root cause, adjust"]:::stage
+    T --> ST["06 PRODUCTION<br/>STAGING<br/>Pick, gather, lanes, verify"]:::stage
+    ST --> PR["07 PRODUCTION<br/>BPR per MMR<br/>closeout"]:::stage
+    PR --> QAQ["08 QA/QC &amp;<br/>ORGANIC<br/>Release · traceability"]:::stage
+    QAQ --> FF["09 FULFILLMENT<br/>&amp; SHIPPING<br/>No Label, No Load"]:::stage
+    FF --> CSV["11 CUSTOMER<br/>SERVICE<br/>Gorgias"]:::stage
+    CSV --> RET["10 RETURNS<br/>Log, inspect,<br/>disposition"]:::stage
+    RET -.->|restock /<br/>adjust| T
+    DL -->|Critical /<br/>organic| ES["12 ESCALATION<br/>Incident Report, QA Hold,<br/>Organic Integrity"]:::crit
+    CSV -.->|adverse event /<br/>safety complaint| ES
+    DL --> RP["13 REPORT &amp; KPIs<br/>Weekly SC Report,<br/>IRA, SLA, trends"]:::stage
+    ES --> RP
+    RP -.->|preventive<br/>actions| SRC
+    click SRC call openSection("sec-sourcing")
+    click R call openSection("sec-receiving")
+    click T call openSection("sec-theoretical")
+    click CC call openSection("sec-cyclecount")
+    click DL call openSection("sec-discrepancy")
+    click ST call openSection("sec-staging")
+    click PR call openSection("sec-production")
+    click QAQ call openSection("sec-quality")
+    click FF call openSection("sec-fulfillment")
+    click RET call openSection("sec-returns")
+    click CSV call openSection("sec-custservice")
+    click ES call openSection("sec-escalation")
+    click RP call openSection("sec-report")
+    classDef stage fill:#ffffff,stroke:#008080,stroke-width:2px,color:#0d3d3d;
+    classDef crit fill:#fdeceb,stroke:#b3261e,stroke-width:2px,color:#7a1a15;
+      </pre></div>
+      <p class="overview-hint">Every node is clickable · Dotted lines are feedback loops.</p>
+    </div>
+  </section>
+
+  <!-- ============ 01 SOURCING & PROCUREMENT ============ -->
+  <section class="block" id="sec-sourcing">
+    <header tabindex="0" role="button" aria-expanded="false">
+      <span class="num">01</span>
+      <h2>Sourcing &amp; Procurement</h2>
+      <span class="src">Supplier verification · PO Tracker</span>
+      <span class="chev">&#9654;</span>
+    </header>
+    <div class="body">
+      <p class="lead">From a demand signal to a confirmed purchase order with a verified supplier. Every supplier must be approved before ordering; organic suppliers must have a current certificate on file before their material can be received.</p>
+      <p class="roles"><strong>Roles</strong>Sourcing &amp; Procurement Specialist · Remote Operations &amp; SC Lead</p>
+      <div class="diagram"><pre class="mermaid" data-rendered="false">
+flowchart TD
+    A["Demand signal<br/>production schedule · reorder point · new product"]:::proc --> B["Create PO in PO Tracker<br/>item · qty · UOM · target ETA"]:::proc
+    B --> C{"Supplier approved?<br/>H4 Approved Supplier List"}:::dec
+    C -->|No| V["Supplier verification<br/>Product Spec Requirements · COA capability<br/>organic certificate (Americert / USDA NOP)"]:::proc
+    V --> D{"Verification passed?"}:::dec
+    D -->|No| RJ["Reject supplier<br/>source an alternative"]:::crit
+    RJ --> B
+    D -->|Yes| ADD["Add to H4 Approved List<br/>file certificates &amp; specs"]:::proc
+    ADD --> E
+    C -->|Yes| E["Place order<br/>confirm price · lead time · lot + COA requirements"]:::proc
+    E --> F["Track ETA in PO Tracker<br/>notify warehouse of expected delivery"]:::proc
+    F --> Z(["PO details feed 02 Receiving"]):::term
+    classDef proc fill:#ffffff,stroke:#008080,stroke-width:1.6px,color:#1e2b2b;
+    classDef dec fill:#fdf3e7,stroke:#b45309,stroke-width:1.6px,color:#5b2c05;
+    classDef crit fill:#fdeceb,stroke:#b3261e,stroke-width:1.6px,color:#7a1a15;
+    classDef term fill:#008080,stroke:#065f5f,color:#ffffff;
+      </pre></div>
+      <div class="docs"><strong>Documents</strong>
+        <ul>
+          <li><a href="https://docs.google.com/spreadsheets/d/1qWmfUzNYgLFtQuZi9j4pu829Knb0xsDM/edit?gid=1776177308" target="_blank" rel="noopener">H4 Approved Supplier List</a></li>
+          <li><a href="https://drive.google.com/drive/folders/1ctNlW9zzYUP_FiROHpQipdf7cps5rvew" target="_blank" rel="noopener">Supplier Verification folder</a></li>
+          <li><a href="https://docs.google.com/document/d/1EF9QBcYkKHIw58ENk9mv9ZdUAwydbxUQ9aY14BIMQMQ/edit" target="_blank" rel="noopener">Product Specification Requirements</a></li>
+          <li><a href="https://drive.google.com/drive/u/0/folders/11tMdNGVmAnoqQiB4Es5hhHgxDGrivVQD" target="_blank" rel="noopener">Supplier Certificates folder</a></li>
+          <li><a href="https://drive.google.com/drive/folders/1_CBU3Bjy5lPvqdgaVDFO7QxzhMWTQVp6" target="_blank" rel="noopener">Specifications folder</a></li>
+          <li><a href="https://docs.google.com/spreadsheets/d/1-hV07B23uHc6bR5n7K3EODJD4IRPuZLaqewlw6dAYEM/edit" target="_blank" rel="noopener">PO Log (PO Tracker)</a></li>
+          <li><a href="https://docs.google.com/document/d/13R5VKhA6j6cxhm45AJPZw9hxzbK50b5x7Ye0inzBsgE/edit" target="_blank" rel="noopener">iSKU &amp; Material Naming Conventions SOP</a></li>
+          <li><a href="https://drive.google.com/file/d/1nCVFdII9YBtE-YVbpW6ndmrJI963PnoQ/view" target="_blank" rel="noopener">Sourcing &amp; Procurement SOP (011)</a></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 02 RECEIVING ============ -->
+  <section class="block" id="sec-receiving">
+    <header tabindex="0" role="button" aria-expanded="false">
+      <span class="num">02</span>
+      <h2>Receiving</h2>
+      <span class="src">Product Receiving SOP · SOP-021</span>
+      <span class="chev">&#9654;</span>
+    </header>
+    <div class="body">
+      <p class="lead">Everything entering the warehouse: inspection before signing, document and organic verification, same-day entry in the Receiving Log, internal lot numbering, and segregated storage.</p>
+      <p class="roles"><strong>Roles</strong>Warehouse Associate (Receiver) · Warehouse Manager · Remote QA Lead · Sourcing &amp; Procurement</p>
+      <div class="diagram"><pre class="mermaid" data-rendered="false">
+flowchart TD
+    A["Prepare for delivery<br/>Check PO Tracker · clear quarantine area"]:::proc --> B["Delivery arrives<br/>Inspect packaging BEFORE signing"]:::proc
+    B --> C{"Packaging OK?<br/>sealed · no damage · no pests<br/>case count matches BOL"}:::dec
+    C -->|FAIL| Q["STOP &rarr; Receiving Quarantine<br/>Photograph · notify QA · QA Hold"]:::crit
+    Q --> QD{"QA decision"}:::dec
+    QD -->|Reject| RJ["Return / dispose<br/>S&P contacts supplier"]:::crit
+    QD -->|Accept| V
+    C -->|PASS| V["Verify labels & documents match<br/>name vs PO · lot vs COA/BOL/invoice · supplier · qty"]:::proc
+    V --> O{"Organic item?"}:::dec
+    O -->|Yes| OV["Organic verification<br/>certificate on file · H4 approved list<br/>separate pallets, off ground"]:::proc
+    OV --> OK{"Verified?"}:::dec
+    OK -->|No / unsure| Q
+    OK -->|Yes| L
+    O -->|No| L["Record in Receiving Log SAME DAY<br/>10 fields incl. Actual Qty vs Expected Qty"]:::proc
+    L --> LOT["Assign internal lot number<br/>MMDDYY + letter · apply receiving label"]:::proc
+    LOT --> M{"Actual = Expected?"}:::dec
+    M -->|No| DX["Record Actual AS FOUND<br/>Open Discrepancy Log row &rarr; section 05<br/>Notify S&P"]:::crit
+    DX --> S
+    M -->|Yes| S["Store in designated zone<br/>pallets off ground · organic segregated"]:::proc
+    S --> F["File documents<br/>Scan to Drive · link + highlight in log<br/>organic cabinet by month"]:::proc
+    F --> Z(["Receipt feeds theoretical inventory"]):::term
+    classDef proc fill:#ffffff,stroke:#008080,stroke-width:1.6px,color:#1e2b2b;
+    classDef dec fill:#fdf3e7,stroke:#b45309,stroke-width:1.6px,color:#5b2c05;
+    classDef crit fill:#fdeceb,stroke:#b3261e,stroke-width:1.6px,color:#7a1a15;
+    classDef term fill:#008080,stroke:#065f5f,color:#ffffff;
+      </pre></div>
+      <div class="docs"><strong>Documents</strong>
+        <ul>
+          <li><a href="https://drive.google.com/file/d/1HNcVIHyGY4oX0lvyZpLHELFpiInd9zHU/view" target="_blank" rel="noopener">Product Receiving SOP (021) — merged, SC Pod</a></li>
+          <li><a href="https://docs.google.com/document/d/1dloV0F9X5Qmfo9BNCsPA0rGWluTYAFngLwULiJ16Ud0/edit" target="_blank" rel="noopener">Organic Compliance Training Guide</a></li>
+          <li><a href="https://docs.google.com/spreadsheets/d/1sL4xGiaWcmzl7RzdBHREzICbnBLjDUJZ_1r_-15FbGo/edit?gid=239813818" target="_blank" rel="noopener">Receiving and Dispatch Log</a></li>
+          <li><a href="https://docs.google.com/document/d/1GzycJEYTOIVdDm1sy1neSmHIgjx_Z1M_xTT_giLD8e8/edit" target="_blank" rel="noopener">Pre-Mock Audit Warehouse Checklist</a></li>
+          <li><a href="https://drive.google.com/drive/u/0/folders/11tMdNGVmAnoqQiB4Es5hhHgxDGrivVQD" target="_blank" rel="noopener">Supplier Certificates folder</a></li>
+          <li><a href="https://docs.google.com/spreadsheets/d/1qWmfUzNYgLFtQuZi9j4pu829Knb0xsDM/edit?gid=1776177308" target="_blank" rel="noopener">H4 Approved Supplier List</a></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 03 THEORETICAL INVENTORY ============ -->
+  <section class="block" id="sec-theoretical">
+    <header tabindex="0" role="button" aria-expanded="false">
+      <span class="num">03</span>
+      <h2>Theoretical Inventory</h2>
+      <span class="src">Inventory Calculation SOP · rev. 03/2025</span>
+      <span class="chev">&#9654;</span>
+    </header>
+    <div class="body">
+      <p class="lead">How the theoretical quantity in Warehouse Inventory Report v2 is calculated: what adds, what deducts, and why Date Counted is the cutoff.</p>
+      <p class="roles"><strong>Roles</strong>Remote Operations &amp; SC Lead · Inventory Manager · Warehouse Data Administrator</p>
+      <div class="diagram"><pre class="mermaid" data-rendered="false">
+flowchart TD
+    RL["Receiving Log<br/>Actual Qty received"]:::src -->|"+ adds"| THEO["THEORETICAL QTY<br/>Warehouse Inventory Report v2<br/>RawInventory · PackagingBOMs · FG"]:::core
+    MO["MO and FO Log<br/>Gross Produced"]:::src -->|"&minus; deducts RM/PKG<br/>MO qty &times; BOM mapping"| THEO
+    MAP["ASIN Master<br/>BOM Mapping tab"]:::src -.->|"qty per unit"| MO
+    MO -->|"+ adds FG<br/>Gross Produced"| THEO
+    SHIP["MO and FO Log<br/>Actual Shipped Qty (FO)"]:::src -->|"&minus; deducts FG"| THEO
+    GIMS["G-IMS Shipstation tab<br/>IHF line items"]:::src -->|"&minus; deducts FG"| THEO
+    CNT["Actual Count + Date Counted<br/>(from cycle count)"]:::proc -->|"resets baseline:<br/>only transactions AFTER<br/>Date Counted apply"| THEO
+    THEO --> DIFF(["Feeds Diff in Cycle Count Monitoring"]):::term
+    classDef src fill:#eaf4f4,stroke:#008080,stroke-width:1.6px,color:#0d3d3d;
+    classDef core fill:#ffffff,stroke:#065f5f,stroke-width:2.4px,color:#0d3d3d;
+    classDef proc fill:#ffffff,stroke:#008080,stroke-width:1.6px,color:#1e2b2b;
+    classDef term fill:#008080,stroke:#065f5f,color:#ffffff;
+      </pre></div>
+      <div class="docs"><strong>Documents</strong>
+        <ul>
+          <li><a href="https://docs.google.com/document/d/1Xu9gXyZaDroBeDAvpPfSAEqUbB_CGBCdLtMXrbaeh1U/edit" target="_blank" rel="noopener">Inventory Calculation SOP</a></li>
+          <li><a href="https://docs.google.com/spreadsheets/d/1m2RvQ-l1KWe4ur3IJCum8b3uq6MwcZpdThUtDXwxvQ8/edit" target="_blank" rel="noopener">Warehouse Inventory Report v2</a></li>
+          <li><a href="https://docs.google.com/spreadsheets/d/1fU2nZxSgLie6fVRrj4L6-UHi19DsL3ZVwS8UqTlChaY/edit" target="_blank" rel="noopener">MO and FO Log</a></li>
+          <li><a href="https://docs.google.com/spreadsheets/d/1mxNB4-gbW90rDog3xxU2DFhWU-v6-kWBwE2VamR-0To/edit?gid=1057838481" target="_blank" rel="noopener">ASIN Master — Mapping</a></li>
+          <li><a href="https://docs.google.com/spreadsheets/d/1MhAxueMqd20lJCFWXfCdSwTRaVgdC6woW0I82PP8IbQ/edit?gid=126266759" target="_blank" rel="noopener">G-IMS — Shipstation</a></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 04 CYCLE COUNT ============ -->
+  <section class="block" id="sec-cyclecount">
+    <header tabindex="0" role="button" aria-expanded="false">
+      <span class="num">04</span>
+      <h2>Cycle Count &amp; Detection</h2>
+      <span class="src">Cycle Count Monitoring · Mondays</span>
+      <span class="chev">&#9654;</span>
+    </header>
+    <div class="body">
+      <p class="lead">The four points where discrepancies are detected. The Monday cycle count is the main one, but receiving, production, and stockouts also feed section 05.</p>
+      <p class="roles"><strong>Roles</strong>Warehouse Manager · Inventory Manager · Warehouse Associate</p>
+      <div class="diagram"><pre class="mermaid" data-rendered="false">
+flowchart TD
+    CC["Monday cycle count<br/>record Actual Count"]:::proc --> DIFF["Diff = Actual &minus; Theoretical<br/>Cycle Count Monitoring"]:::core
+    RV["Receiving<br/>Actual vs Expected Qty"]:::src --> DET
+    BPR["BPR closeout<br/>Actual Used vs BOM standard"]:::src --> DET
+    MOFO["MO/FO reconciliation<br/>Plan vs Actual · Produced vs Shipped"]:::src --> DET
+    SO["Stockout Log<br/>system shows stock, shelf empty"]:::src --> DET
+    DIFF --> DET{"Any variance<br/>detected?"}:::dec
+    DET -->|No| OKK(["Counts match — baseline resets"]):::term
+    DET -->|Yes| GO(["&rarr; 05 Discrepancy workflow"]):::term
+    classDef proc fill:#ffffff,stroke:#008080,stroke-width:1.6px,color:#1e2b2b;
+    classDef core fill:#ffffff,stroke:#065f5f,stroke-width:2.4px,color:#0d3d3d;
+    classDef src fill:#eaf4f4,stroke:#008080,stroke-width:1.6px,color:#0d3d3d;
+    classDef dec fill:#fdf3e7,stroke:#b45309,stroke-width:1.6px,color:#5b2c05;
+    classDef term fill:#008080,stroke:#065f5f,color:#ffffff;
+      </pre></div>
+      <div class="docs"><strong>Documents</strong>
+        <ul>
+          <li><a href="https://docs.google.com/spreadsheets/d/1Kq3vM3mBQtOqn5YTdffac6dPiRE5PonHUrc1j4CgdQ4/edit" target="_blank" rel="noopener">Cycle Count Monitoring</a></li>
+          <li><a href="https://docs.google.com/spreadsheets/d/1sL4xGiaWcmzl7RzdBHREzICbnBLjDUJZ_1r_-15FbGo/edit?gid=239813818" target="_blank" rel="noopener">Receiving and Dispatch Log</a></li>
+          <li><a href="https://docs.google.com/spreadsheets/d/1fU2nZxSgLie6fVRrj4L6-UHi19DsL3ZVwS8UqTlChaY/edit" target="_blank" rel="noopener">MO and FO Log</a></li>
+          <li><span class="pend">BPR Actual Used BOMs — pending link</span></li>
+          <li><a href="https://drive.google.com/file/d/1nVPJ7qA_9YXdbKWPRyYCjtLd3a0p6smx/view" target="_blank" rel="noopener">Stockout Log (tab)</a></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 05 DISCREPANCY ============ -->
+  <section class="block" id="sec-discrepancy">
+    <header tabindex="0" role="button" aria-expanded="false">
+      <span class="num">05</span>
+      <h2>Discrepancy</h2>
+      <span class="src">Inventory Discrepancy Tracking SOP · SOP-0001</span>
+      <span class="chev">&#9654;</span>
+    </header>
+    <div class="body">
+      <p class="lead">Classify by severity, log in the Discrepancy Log, recount within 24 hours, investigate root cause, and adjust only with approval.</p>
+      <p class="roles"><strong>Roles</strong>Inventory Manager · Warehouse Manager · Remote QA Lead (critical cases)</p>
+      <div class="diagram"><pre class="mermaid" data-rendered="false">
+flowchart TD
+    IN(["Variance detected — 04"]):::term --> VAL["Calculate Diff $ value<br/>units &times; unit cost (iSKU Master)"]:::proc
+    VAL --> SEV{"Classify severity"}:::dec
+    SEV -->|"Within tolerance<br/>&le;2% AND &le;$50"| TA["Log + adjust<br/>no investigation"]:::proc
+    TA --> CL(["Close row"]):::term
+    SEV -->|"Low / Medium / High"| LOG["Log in Discrepancy Log<br/>DISC-MMDDYY-##"]:::proc
+    SEV -->|"Critical: >$2,500 · organic<br/>· suspected mix-up"| CR["Log + &rarr; 12 Escalation"]:::crit
+    LOG --> RC["Recount within 24 h<br/>second person · adjacent bins<br/>alternate label codes"]:::proc
+    RC --> RM{"Recount matches<br/>theoretical?"}:::dec
+    RM -->|Yes| CLT["Close as Data Entry/Timing<br/>or Mislocation"]:::proc
+    CLT --> CL
+    RM -->|No| INV["Investigate root cause, in order:<br/>Receiving Log &rarr; MO/FO Log &rarr;<br/>BPR Actual Used &rarr; G-IMS Shipstation"]:::proc
+    CR --> INV
+    INV --> CAT["Assign root cause category<br/>+ corrective + preventive action"]:::proc
+    CAT --> AP{"Approval per severity"}:::dec
+    AP -->|"Medium: IM Manager"| ADJ
+    AP -->|"High: WH Manager"| ADJ["Post adjustment in WH Inventory v2<br/>update count + Date Counted"]:::proc
+    ADJ --> CL
+    CL --> RPT(["&rarr; 13 Report &amp; Trend"]):::term
+    classDef proc fill:#ffffff,stroke:#008080,stroke-width:1.6px,color:#1e2b2b;
+    classDef dec fill:#fdf3e7,stroke:#b45309,stroke-width:1.6px,color:#5b2c05;
+    classDef crit fill:#fdeceb,stroke:#b3261e,stroke-width:1.6px,color:#7a1a15;
+    classDef term fill:#008080,stroke:#065f5f,color:#ffffff;
+      </pre></div>
+      <div class="docs"><strong>Documents</strong>
+        <ul>
+          <li><a href="https://drive.google.com/file/d/14W0N-fx25Rb7vC_0d41XCI6qbHW0NUJC/view" target="_blank" rel="noopener">Inventory Discrepancy Tracking &amp; Resolution SOP</a></li>
+          <li><a href="https://docs.google.com/spreadsheets/d/1Kq3vM3mBQtOqn5YTdffac6dPiRE5PonHUrc1j4CgdQ4/edit" target="_blank" rel="noopener">Cycle Count Monitoring</a></li>
+          <li><a href="https://docs.google.com/spreadsheets/d/1D56Rf-_yJDpojcxWWaquLPwlCesBACEp7jpUPmpnlSQ/edit?gid=447659651" target="_blank" rel="noopener">Inventory Discrepancy Log (live)</a></li>
+          <li><a href="https://drive.google.com/file/d/1nVPJ7qA_9YXdbKWPRyYCjtLd3a0p6smx/view" target="_blank" rel="noopener">Discrepancy &amp; Stockout Log template (Baserow mirror)</a></li>
+          <li><a href="https://docs.google.com/spreadsheets/d/1oW4mNov0iR8yyGq69gHGndYVRV2xbqC3N74KqC592Xc/edit" target="_blank" rel="noopener">iSKU Master</a></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 06 PRODUCTION STAGING ============ -->
+  <section class="block" id="sec-staging">
+    <header tabindex="0" role="button" aria-expanded="false">
+      <span class="num">06</span>
+      <h2>Production Staging</h2>
+      <span class="src">Weekly Material Gathering &amp; Staging SOP</span>
+      <span class="chev">&#9654;</span>
+    </header>
+    <div class="body">
+      <p class="lead">Every Friday/Saturday, all materials for the coming production week are picked, lot-recorded, staged in color-coded lanes (green = organic only), and independently verified. Production does not start until verification is complete.</p>
+      <p class="roles"><strong>Roles</strong>Warehouse Manager · Material Handler / Warehouse Associate · Remote QA Lead or Inventory Manager (independent verification)</p>
+      <div class="diagram"><pre class="mermaid" data-rendered="false">
+flowchart TD
+    A["Friday/Saturday: review Outflow Log<br/>identify all MOs for the week · Monday first"]:::proc --> B["Generate &amp; print pick lists<br/>Harvest Lab &rarr; Orders &rarr; Manufacturing"]:::proc
+    B --> C["Gather labels &amp; packaging<br/>clean basket · colored tape + MO #<br/>stage beside batching printer"]:::proc
+    C --> D["Gather ORGANIC raw materials FIRST<br/>record internal lot · mfr lot · qty"]:::proc
+    D --> E["Stage organics in GREEN lane ONLY<br/>non-organic may never enter it"]:::crit
+    E --> F["Gather non-organic materials<br/>record lots &amp; qty · stage in YELLOW lane"]:::proc
+    F --> G["Label every container with its MO<br/>one label per MO if a container is shared"]:::proc
+    G --> H["Inventory verification<br/>WH Manager: system vs physical"]:::proc
+    H --> I{"Discrepancy<br/>found?"}:::dec
+    I -->|Yes| K["Correct BEFORE production<br/>log in Inventory Discrepancy Log &rarr; 05"]:::crit
+    K --> J
+    I -->|No| J["Independent verification vs Pick List / BPR<br/>materials · qty · lots · MO ID · segregation"]:::proc
+    J --> M{"Verified?"}:::dec
+    M -->|No| K
+    M -->|Yes| Z(["Production-ready for Monday &rarr; 07"]):::term
+    classDef proc fill:#ffffff,stroke:#008080,stroke-width:1.6px,color:#1e2b2b;
+    classDef dec fill:#fdf3e7,stroke:#b45309,stroke-width:1.6px,color:#5b2c05;
+    classDef crit fill:#fdeceb,stroke:#b3261e,stroke-width:1.6px,color:#7a1a15;
+    classDef term fill:#008080,stroke:#065f5f,color:#ffffff;
+      </pre></div>
+      <div class="docs"><strong>Documents</strong>
+        <ul>
+          <li><a href="https://drive.google.com/file/d/1THT80cikMeUAFqOwzSK7pmrbPqNDb7GF/view" target="_blank" rel="noopener">Weekly Material Gathering &amp; Staging (Sterling &mdash; field guide)</a></li>
+          <li><a href="https://drive.google.com/file/d/1ts_Z7HTFmSshMzE2S75HolvHTmZyKjVi/view" target="_blank" rel="noopener">Material Gathering &amp; Staging (Sterling &mdash; field guide)</a></li>
+          <li><span class="pend">Production Staging SOP (NOVAEO template) &mdash; to be written from Sterling&#39;s guides</span></li>
+          <li><span class="pend">Outflow Log — pending link</span></li>
+          <li><span class="pend">MOFO Board (Baserow) — pending link</span></li>
+          <li><span class="pend">Harvest Lab (pick lists) — pending link</span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 07 PRODUCTION & MANUFACTURING ============ -->
+  <section class="block" id="sec-production">
+    <header tabindex="0" role="button" aria-expanded="false">
+      <span class="num">07</span>
+      <h2>Production &amp; Manufacturing</h2>
+      <span class="src">BPR per MMR · End of Production Closeout</span>
+      <span class="chev">&#9654;</span>
+    </header>
+    <div class="body">
+      <p class="lead">The general manufacturing flow, common to every product: the day starts from the MOFO Board on the warehouse screen, each batch runs against a Batch Production Record that reproduces the product's Master Manufacturing Record with initials and verification at every step, and the day closes with a formal closeout and the MO marked COMPLETED in the board.</p>
+      <p class="roles"><strong>Roles</strong>Warehouse Manager · Operators · Remote Operations &amp; SC Lead (BPR completion &amp; posting) · Remote QA Lead (review &amp; holds)</p>
+      <div class="diagram"><pre class="mermaid" data-rendered="false">
+flowchart TD
+    IN(["Staged &amp; verified materials — 06"]):::term --> MB0["Check the MOFO Board (Baserow)<br/>on the warehouse screen:<br/>today's PENDING MOs"]:::src
+    MB0 --> PCC["Pre-cleaning check<br/>room &amp; equipment released for use"]:::proc
+    PCC --> BPRO["Open Batch Production Record<br/>accurate reproduction of the product's MMR<br/>lot numbers of every component"]:::proc
+    BPRO --> MFG["Manufacture per MMR<br/>gathering setup &rarr; batch/mix &rarr; fill &rarr;<br/>cap / heat seal / shrink wrap &rarr; apply labels<br/>initials + verifier at each step"]:::proc
+    MFG --> QC{"In-process checks pass?<br/>fill weights · label qty reconciliation<br/>yield vs theoretical"}:::dec
+    QC -->|No| HOLD["Deviation: document on BPR<br/>QA Hold if product integrity in question"]:::crit
+    HOLD --> DISP{"QA disposition"}:::dec
+    DISP -->|"Rework / release"| MFG
+    DISP -->|Reject| RJ["Segregate &amp; dispose per QA"]:::crit
+    QC -->|Yes| PC["Post-cleaning<br/>date/time recorded on BPR"]:::proc
+    PC --> CO["End of Production Closeout<br/>complete &amp; post BPRs · Daily Production Report<br/>yields · holds · deviations · unresolved issues"]:::proc
+    CO --> MBD["Mark the MO as COMPLETED<br/>in the MOFO Board app<br/>so it clears from tomorrow's pending"]:::proc
+    MBD --> Z(["FG adds to theoretical inventory — 03<br/>&rarr; 08 QA release &rarr; 09 Fulfillment"]):::term
+    classDef proc fill:#ffffff,stroke:#008080,stroke-width:1.6px,color:#1e2b2b;
+    classDef src fill:#eaf4f4,stroke:#008080,stroke-width:1.6px,color:#0d3d3d;
+    classDef dec fill:#fdf3e7,stroke:#b45309,stroke-width:1.6px,color:#5b2c05;
+    classDef crit fill:#fdeceb,stroke:#b3261e,stroke-width:1.6px,color:#7a1a15;
+    classDef term fill:#008080,stroke:#065f5f,color:#ffffff;
+      </pre></div>
+      <p class="subhead">Product SOP Library — categories</p>
+      <p class="lead">One general Production SOP governs the flow above. Product-specific SOPs (with their MMR and FP Spec) hang from these four branches and will be added one by one.</p>
+      <div class="diagram"><pre class="mermaid" data-rendered="false">
+flowchart TD
+    P["PRODUCT SOP LIBRARY<br/>General Production SOP<br/>+ MMR &amp; FP Spec per product"]:::core --> PW["POWDER"]:::stage
+    P --> LQ["LIQUID"]:::stage
+    PW --> PWF["Food / dietary grade"]:::ghost
+    PW --> PWC["Cosmetic grade"]:::ghost
+    LQ --> LQF["Food / dietary grade<br/>1 SOP live: Organic Monkfruit Juice"]:::stage
+    LQ --> LQC["Cosmetic grade<br/>6 SOPs live: Face, Sleep, Body,<br/>Room, Linen Lavender, Pillow sprays"]:::stage
+    PWF -.-> N1["Per-product SOPs<br/>to be added one by one"]:::ghost
+    PWC -.-> N1
+    classDef core fill:#ffffff,stroke:#065f5f,stroke-width:2.4px,color:#0d3d3d;
+    classDef stage fill:#ffffff,stroke:#008080,stroke-width:2px,color:#0d3d3d;
+    classDef ghost fill:#fafcfc,stroke:#9fb3b3,stroke-dasharray:5 4,color:#546969;
+      </pre></div>
+      <div class="docs"><strong>Documents</strong>
+        <ul>
+          <li><a href="https://drive.google.com/file/d/1bMtrAPhQJqiNzwRcscLnB2zo1Gt5XcR4/view" target="_blank" rel="noopener">General Production SOP (032)</a></li>
+          <li><a href="https://docs.google.com/spreadsheets/d/1xH6btEUcyntBc8qqX13jU07VrWQqozf90ZG4P-WSXNc/edit" target="_blank" rel="noopener">Batch Production Record and FO</a></li>
+          <li><a href="https://docs.google.com/document/d/1-_LR7VKYtrYRyCv7kANE9rL3MFqywII-NJ7Luiqfm10/edit" target="_blank" rel="noopener">Batch Production Records SOP (legacy)</a></li>
+          <li><a href="https://docs.google.com/document/d/1KQTQawwChWnITxnyKJ6QjRN32xAmdtGHNRdoc-NKYmo/edit" target="_blank" rel="noopener">MMR &amp; FP Spec Development guide</a></li>
+          <li><a href="https://docs.google.com/spreadsheets/d/1jMr0XEOxdwq0c2DWALbdHXZq4htjgYGvKKYl-B6ho1g/edit" target="_blank" rel="noopener">MMR Log</a></li>
+          <li><a href="https://drive.google.com/drive/folders/1YP3guLj7LTeJUWEqfj7MM-pi9LYhB2oh" target="_blank" rel="noopener">MMR folder</a></li>
+          <li><a href="https://docs.google.com/spreadsheets/d/1NKOZoUJT0smadj5DS3hAwl4-hklOmGoCI0SAYa7IDZ8/edit" target="_blank" rel="noopener">Finished Product Spec Log</a></li>
+          <li><a href="https://docs.google.com/spreadsheets/d/1ku30SWDy8xPteAFfJ_dshjKqalnTNAA2AGHHGEe-tU0/edit" target="_blank" rel="noopener">GMP Powder Masterlist</a></li>
+          <li><a href="https://docs.google.com/spreadsheets/d/10pAY5HUqnBUvBB4W7pIo35zSKyAAJYd_9xIT64rQl8o/edit" target="_blank" rel="noopener">Label Index</a></li>
+          <li><a href="https://drive.google.com/file/d/1ZLJ--eC2GcS6u-v-2sQ6ZHGhgE-VuFb4/view" target="_blank" rel="noopener">End of Production Closeout SOP</a></li>
+          <li><a href="https://drive.google.com/file/d/1CT9WWDtSYceEwNPo8ytppE-x6p7sxiMw/view" target="_blank" rel="noopener">WH Manager Absence Coverage SOP</a></li>
+          <li><span class="pend">MOFO Board (Baserow) — pending link</span></li>
+          <li><a href="https://drive.google.com/file/d/1Skwug2TiZ4Z3qY21FAiV20Tu91gCiiXw/view" target="_blank" rel="noopener">WH Manager Daily Operations &amp; Compliance SOP</a></li>
+          <li><a href="https://drive.google.com/file/d/1GmV4qblu6ztzts080QqYz6Y2Gi7O71_-/view" target="_blank" rel="noopener">WH Manager Compliance Checklist (EOD)</a></li>
+          <li><a href="https://drive.google.com/file/d/1JavnFgSmfQz1IPd7JAuWGFv_lTDtSL1Z/view" target="_blank" rel="noopener">Liquid &middot; Food: Organic Monkfruit Juice SOP</a></li>
+          <li><a href="https://drive.google.com/file/d/1hMquI5_omRm48kD1l7CK8AQi0a9tFhH0/view" target="_blank" rel="noopener">Monkfruit Bilingual Work Instruction</a></li>
+          <li><a href="https://drive.google.com/file/d/1Oz52xfkU58shh5bto8hzzBTkJxePkGoO/view" target="_blank" rel="noopener">Liquid &middot; Cosmetic: Face Spray SOP</a></li>
+          <li><a href="https://drive.google.com/file/d/1twNLSJkOWDoe91bGn4PGrkc0FuDyTRHw/view" target="_blank" rel="noopener">Sleep Spray SOP</a></li>
+          <li><a href="https://drive.google.com/file/d/1iCHrHNMs0ESV1YI9HijM8_uBGfXrA3yS/view" target="_blank" rel="noopener">Body Spray SOP</a></li>
+          <li><a href="https://drive.google.com/file/d/1tTDHU5tVWGZp1BgkOkddmacv61dYNoos/view" target="_blank" rel="noopener">Room Spray SOP</a></li>
+          <li><a href="https://drive.google.com/file/d/1eqcS7XAYo1k-ANySlP1aTJ_bS7xUCsCa/view" target="_blank" rel="noopener">Linen Spray Lavender SOP</a></li>
+          <li><a href="https://drive.google.com/file/d/19Sz0ILaq1sXPdrQfYEZauesPL9eO20Dj/view" target="_blank" rel="noopener">Pillow Spray SOP</a></li>
+          <li><a href="https://drive.google.com/drive/folders/1lSiNCxLW3kNM4VNviQAI-O1PlIY6rB7q" target="_blank" rel="noopener">SC Pod SOP folder (all controlled SOPs)</a></li>
+          <li><a href="https://drive.google.com/drive/folders/1FGoEXzWFGCqguuw1fX2Nbh_r1k76FHvP" target="_blank" rel="noopener">&#128193; Liquid &middot; Food grade folder</a></li>
+          <li><a href="https://drive.google.com/drive/folders/12bA6ATJPVELr1ACasb81EDCGAo5JsooF" target="_blank" rel="noopener">&#128193; Liquid &middot; Cosmetic grade folder</a></li>
+          <li><a href="https://drive.google.com/drive/folders/1RdHhMmtyy0tssyeBHprsSclJRl0XO4rz" target="_blank" rel="noopener">&#128193; Powder &middot; Food grade folder</a></li>
+          <li><a href="https://drive.google.com/drive/folders/1sZ1JvXI29gGwxQEXJFTF-dGSs3uDvg0I" target="_blank" rel="noopener">&#128193; Powder &middot; Cosmetic grade folder</a></li>
+          <li><span class="ghost">Powder &middot; Food grade — product SOPs planned</span></li>
+          <li><span class="ghost">Powder &middot; Cosmetic grade — product SOPs planned</span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 08 QA/QC & ORGANIC COMPLIANCE ============ -->
+  <section class="block" id="sec-quality">
+    <header tabindex="0" role="button" aria-expanded="false">
+      <span class="num">08</span>
+      <h2>QA/QC &amp; Organic Compliance</h2>
+      <span class="src">Traceability · Mass Balance · GMP programs</span>
+      <span class="chev">&#9654;</span>
+    </header>
+    <div class="body">
+      <p class="lead">Quality gates every stage: incoming COA and organic verification, in-process BPR checks, finished-product release against the FP Spec — plus the two monthly organic verifications and the standing GMP programs (sanitation, calibration, training).</p>
+      <p class="roles"><strong>Roles</strong>Remote QA Lead (Quality Manager) · Warehouse Manager · Sanitation Supervisor</p>
+      <div class="diagram"><pre class="mermaid" data-rendered="false">
+flowchart TD
+    RM["Incoming: COA &amp; organic verification<br/>(performed at 02 Receiving)"]:::src --> REL{"QA release<br/>decision"}:::dec
+    IP["In-process: BPR checks<br/>verification initials at each step"]:::src --> REL
+    FP["Finished product vs FP Spec<br/>appearance · weight · label"]:::src --> REL
+    SAN["Master Sanitation Schedule"]:::src -.-> REL
+    CAL["Master Calibration Schedule"]:::src -.-> REL
+    TRN["Training Log"]:::src -.-> REL
+    REL -->|"Hold / Reject"| HOLD["QA Hold placard<br/>HOLD / QC REJECTED / DO NOT USE<br/>&rarr; 12 Escalation if critical"]:::crit
+    REL -->|Release| OK(["Released for 09 Fulfillment"]):::term
+    TR["MONTHLY traceability test<br/>3 random organic FG lots &rarr; trace every<br/>ingredient lot back to supplier records"]:::proc --> VAR{"All traceable<br/>&amp; balanced?"}:::dec
+    MB["MONTHLY mass balance<br/>3 organic RMs (&ge;1 high-velocity) · 90-day window<br/>received &minus; used = remaining?"]:::proc --> VAR
+    VAR -->|No| INVG["Isolate lot · review BPRs by internal lot<br/>document variance &rarr; corrective action with QA"]:::crit
+    VAR -->|Yes| DOC["Document acceptable result<br/>audit-ready records"]:::proc
+    classDef src fill:#eaf4f4,stroke:#008080,stroke-width:1.6px,color:#0d3d3d;
+    classDef proc fill:#ffffff,stroke:#008080,stroke-width:1.6px,color:#1e2b2b;
+    classDef dec fill:#fdf3e7,stroke:#b45309,stroke-width:1.6px,color:#5b2c05;
+    classDef crit fill:#fdeceb,stroke:#b3261e,stroke-width:1.6px,color:#7a1a15;
+    classDef term fill:#008080,stroke:#065f5f,color:#ffffff;
+      </pre></div>
+      <div class="docs"><strong>Documents</strong>
+        <ul>
+          <li><a href="https://drive.google.com/file/d/1TYQHVxhhB9vrg7LLn-dcYL06tqi3b7Pp/view" target="_blank" rel="noopener">Organic Traceability Verification SOP</a></li>
+          <li><a href="https://drive.google.com/file/d/1EnO9y5KjHCslFPwkBL44mBEEhNfrwPGf/view" target="_blank" rel="noopener">Monthly Organic Mass Balance SOP (draft)</a></li>
+          <li><a href="https://docs.google.com/spreadsheets/d/1YcUM6_Jzj6dwvNSxxueVc9r_ntGy9jgs2DVW59V8Hwo/edit" target="_blank" rel="noopener">Master Sanitation Schedule</a></li>
+          <li><a href="https://docs.google.com/spreadsheets/d/1Wh_mQ_YdL0auSQ8HvMVIVaSBcmkXZyXnsC7MWeDLgTI/edit" target="_blank" rel="noopener">Master Calibration Schedule</a></li>
+          <li><a href="https://docs.google.com/spreadsheets/d/1VHyxhbNBRMrd7w5Rd8SqMvhFOun5htr6eg-pgGyGPr8/edit" target="_blank" rel="noopener">Training Log (QM-004)</a></li>
+          <li><a href="https://docs.google.com/document/d/1Sv1s5i76zRnFng-Asn3EqwMhmw6mt3nbex3UmNWJAU4/edit" target="_blank" rel="noopener">Food Safety Plan</a></li>
+          <li><a href="https://drive.google.com/file/d/1Skwug2TiZ4Z3qY21FAiV20Tu91gCiiXw/view" target="_blank" rel="noopener">WH Manager Daily Operations &amp; Compliance SOP</a></li>
+          <li><a href="https://docs.google.com/document/d/1dloV0F9X5Qmfo9BNCsPA0rGWluTYAFngLwULiJ16Ud0/edit" target="_blank" rel="noopener">Organic Compliance Training Guide</a></li>
+          <li><a href="https://drive.google.com/file/d/1wxCqqR4_mpdubqgiZO6bmal_IhRBJ5RO/view" target="_blank" rel="noopener">OSOP 002 — Maintaining Organic Integrity</a></li>
+          <li><a href="https://drive.google.com/file/d/1E2qCQKgrEdBMHN3Q5NaJD4veP0YHqOeP/view" target="_blank" rel="noopener">Monthly Organic Mass Balance workbook</a></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 09 FULFILLMENT & SHIPPING ============ -->
+  <section class="block" id="sec-fulfillment">
+    <header tabindex="0" role="button" aria-expanded="false">
+      <span class="num">09</span>
+      <h2>Fulfillment &amp; Shipping</h2>
+      <span class="src">No Label, No Load · FBA / Walmart / TikTok</span>
+      <span class="chev">&#9654;</span>
+    </header>
+    <div class="body">
+      <p class="lead">The day's FOs come from the MOFO Board on the warehouse screen. Packing, verification, FO staging labels on every single box, the Zebra Zone, and the Dispatch Log hard stop before anything is loaded — then the FO is marked COMPLETED in the board. Golden rule: <em>No Label, No Load.</em></p>
+      <p class="roles"><strong>Roles</strong>Warehouse Manager · Warehouse Associate (packaging &amp; dispatch) · E-Commerce Operations Lead (channel prep)</p>
+      <div class="diagram"><pre class="mermaid" data-rendered="false">
+flowchart TD
+    IN(["Released finished goods — 08"]):::term --> FB0["Check the MOFO Board (Baserow)<br/>on the warehouse screen:<br/>today's PENDING FOs"]:::src
+    FB0 --> BOX["Pack by hand · correct box size<br/>&lt;50 lb per box for UPS"]:::proc
+    BOX --> GRP["Group &ge;5 boxes of matching<br/>size/weight where practical"]:::proc
+    GRP --> PAL["Dedicated pallet per order<br/>small orders may share only if<br/>clearly identified &amp; segregated"]:::proc
+    PAL --> VER["Independent verification<br/>second trained employee checks contents"]:::proc
+    VER --> WT["Record weight on the outside<br/>of every completed box"]:::proc
+    WT --> LBL["FO Staging Label on EVERY box<br/>printed from FO Staging Label Generator<br/>never label only the pallet"]:::proc
+    LBL --> ZZ["Move to Zebra Zone for dispatch<br/>staged status controlled by placard"]:::proc
+    ZZ --> DSP{"Dispatch Log complete?<br/>hard stop precondition"}:::dec
+    DSP -->|No| STOPP["NO LABEL, NO LOAD<br/>pallet holds at bay door"]:::crit
+    STOPP --> DSP
+    DSP -->|Yes| SHIP["Load &amp; ship<br/>channel-specific prep:<br/>Amazon FBA · Walmart · TikTok Shop"]:::proc
+    SHIP --> FBD["Mark the FO as COMPLETED<br/>in the MOFO Board app<br/>so it clears from tomorrow's pending"]:::proc
+    FBD --> Z(["Shipment deducts FG — 03<br/>tracking to customer &rarr; 11"]):::term
+    classDef proc fill:#ffffff,stroke:#008080,stroke-width:1.6px,color:#1e2b2b;
+    classDef src fill:#eaf4f4,stroke:#008080,stroke-width:1.6px,color:#0d3d3d;
+    classDef dec fill:#fdf3e7,stroke:#b45309,stroke-width:1.6px,color:#5b2c05;
+    classDef crit fill:#fdeceb,stroke:#b3261e,stroke-width:1.6px,color:#7a1a15;
+    classDef term fill:#008080,stroke:#065f5f,color:#ffffff;
+      </pre></div>
+      <div class="docs"><strong>Documents</strong>
+        <ul>
+          <li><a href="https://drive.google.com/file/d/1fGS03D9Mh54f4guvBbkjWTRIwMKQ-NIX/view" target="_blank" rel="noopener">Fulfillment &amp; Shipping SOP v1.1 — SC Pod</a></li>
+          <li><a href="https://drive.google.com/file/d/1EUWhvNWp0ki12rnrIVZSJopBquEuuvMf/view" target="_blank" rel="noopener">Fulfillment &amp; Shipping SOP v1 (superseded)</a></li>
+          <li><a href="https://drive.google.com/file/d/1-TUWSmpmuuxOSSv_S9sexpkdDmC7zBdl/view" target="_blank" rel="noopener">Finished Goods Packaging &amp; Shipping (Sterling — field guide)</a></li>
+          <li><a href="https://docs.google.com/spreadsheets/d/1sL4xGiaWcmzl7RzdBHREzICbnBLjDUJZ_1r_-15FbGo/edit?gid=239813818" target="_blank" rel="noopener">Receiving and Dispatch Log</a></li>
+          <li><a href="https://docs.google.com/spreadsheets/d/1MhAxueMqd20lJCFWXfCdSwTRaVgdC6woW0I82PP8IbQ/edit?gid=126266759" target="_blank" rel="noopener">G-IMS — Shipstation</a></li>
+          <li><span class="pend">FO Staging Label Generator — pending link</span></li>
+          <li><span class="pend">MOFO Board (Baserow) — pending link</span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 10 RETURNS ============ -->
+  <section class="block" id="sec-returns">
+    <header tabindex="0" role="button" aria-expanded="false">
+      <span class="num">10</span>
+      <h2>Returns</h2>
+      <span class="src">Finished Product Returns Log</span>
+      <span class="chev">&#9654;</span>
+    </header>
+    <div class="body">
+      <p class="lead">Every return — customer, FBA removal, or refused delivery — is logged with its lot, inspected, and dispositioned. Nothing goes back to stock without a clear seal-intact check.</p>
+      <p class="roles"><strong>Roles</strong>Warehouse Associate · Remote QA Lead (disposition) · E-Commerce Operations Lead</p>
+      <div class="diagram"><pre class="mermaid" data-rendered="false">
+flowchart TD
+    IN(["Return arrives<br/>customer · FBA removal · refused delivery"]):::term --> LOG["Log in Finished Product Returns Log<br/>order · product · internal lot · reason"]:::proc
+    LOG --> INSP["Inspect: seal intact? damage?<br/>tampering or contamination risk?"]:::proc
+    INSP --> D{"Disposition"}:::dec
+    D -->|"Sealed &amp; sellable"| RS["Restock as FG<br/>adds back to inventory — 03"]:::proc
+    D -->|"Integrity in question"| QH["QA Hold<br/>&rarr; 12 Escalation"]:::crit
+    D -->|"Opened / damaged"| DS["Destroy / dispose<br/>document on the log"]:::proc
+    RS --> Z
+    QH --> Z
+    DS --> Z(["Reason codes feed 11 CS trends &amp; 13 Report"]):::term
+    classDef proc fill:#ffffff,stroke:#008080,stroke-width:1.6px,color:#1e2b2b;
+    classDef dec fill:#fdf3e7,stroke:#b45309,stroke-width:1.6px,color:#5b2c05;
+    classDef crit fill:#fdeceb,stroke:#b3261e,stroke-width:1.6px,color:#7a1a15;
+    classDef term fill:#008080,stroke:#065f5f,color:#ffffff;
+      </pre></div>
+      <div class="docs"><strong>Documents</strong>
+        <ul>
+          <li><a href="https://docs.google.com/spreadsheets/d/12Ek8dqK0sibIk7mPuAHMXVHXGr9D9bcqQTRxigk9tdw/edit" target="_blank" rel="noopener">Finished Product Returns Log</a></li>
+          <li><a href="https://drive.google.com/file/d/1qdwVwAZnhfZz3k5E1kJHf08DXIEGEi6P/view" target="_blank" rel="noopener">Returns SOP (061)</a></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 11 CUSTOMER SERVICE (GORGIAS) ============ -->
+  <section class="block" id="sec-custservice">
+    <header tabindex="0" role="button" aria-expanded="false">
+      <span class="num">11</span>
+      <h2>Customer Service — Gorgias</h2>
+      <span class="src">Gorgias · Customer Complaints Log</span>
+      <span class="chev">&#9654;</span>
+    </header>
+    <div class="body">
+      <p class="lead">After the sale, every customer contact lands in Gorgias. Order issues resolve against fulfillment data; product complaints go to the Customer Complaints Log and a lot-level investigation; anything touching safety or organic integrity escalates as an incident.</p>
+      <p class="roles"><strong>Roles</strong>E-Commerce Operations Lead (Gorgias) · Remote QA Lead (complaint investigations) · Remote Operations &amp; SC Lead</p>
+      <div class="diagram"><pre class="mermaid" data-rendered="false">
+flowchart TD
+    A["Customer contact<br/>email · chat · Amazon · Walmart · TikTok Shop"]:::proc --> B["Gorgias ticket created<br/>tagged by channel · linked to order"]:::proc
+    B --> C{"Ticket type"}:::dec
+    C -->|"Order status / shipping"| D["Resolve with tracking or reship<br/>coordinate with 09 Fulfillment"]:::proc
+    C -->|"Refund / return request"| E["Authorize return<br/>&rarr; 10 Returns"]:::proc
+    C -->|"Product complaint"| F["Record in Customer Complaints Log<br/>product · internal lot · description"]:::crit
+    F --> G["Complaint investigation<br/>pull BPR &amp; lot records for the batch"]:::proc
+    G --> H{"Adverse event, safety,<br/>or organic issue?"}:::dec
+    H -->|Yes| I["Escalate: Incident Report &rarr; 12<br/>QA Hold on affected lot if needed"]:::crit
+    H -->|No| J["Corrective action<br/>+ customer resolution"]:::proc
+    D --> K
+    E --> K
+    I --> K
+    J --> K["Close Gorgias ticket<br/>document resolution &amp; root cause tag"]:::proc
+    K --> Z(["Complaint &amp; return trends feed 13 Report &amp; KPIs"]):::term
+    classDef proc fill:#ffffff,stroke:#008080,stroke-width:1.6px,color:#1e2b2b;
+    classDef dec fill:#fdf3e7,stroke:#b45309,stroke-width:1.6px,color:#5b2c05;
+    classDef crit fill:#fdeceb,stroke:#b3261e,stroke-width:1.6px,color:#7a1a15;
+    classDef term fill:#008080,stroke:#065f5f,color:#ffffff;
+      </pre></div>
+      <div class="docs"><strong>Documents</strong>
+        <ul>
+          <li><a href="https://docs.google.com/spreadsheets/d/1dzZncfTzn33nR03LX5kcQbYzG0F7p3WQhQXxsaZqiEk/edit" target="_blank" rel="noopener">Customer Complaints Log</a></li>
+          <li><a href="https://drive.google.com/drive/folders/1kJL6KYLGlvXJfJ3KmTmsMIrQHNnQf0Un" target="_blank" rel="noopener">Complaints Investigations folder</a></li>
+          <li><a href="https://drive.google.com/file/d/1NR5GqOJ6VZa8r2Okn4W8d_LjbFb5VWdz/view" target="_blank" rel="noopener">Customer Service SOP — Gorgias (071)</a></li>
+          <li><span class="pend">Gorgias macros &amp; tagging guide — to be written</span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 12 ESCALATION ============ -->
+  <section class="block" id="sec-escalation">
+    <header tabindex="0" role="button" aria-expanded="false">
+      <span class="num">12</span>
+      <h2>Critical Escalation &amp; Organic</h2>
+      <span class="src">Incident Report · Americert / USDA NOP</span>
+      <span class="chev">&#9654;</span>
+    </header>
+    <div class="body">
+      <p class="lead">What happens when anything goes critical: a discrepancy over $2,500, any organic item, suspected cross-contamination or product mix-up — or an adverse-event complaint or questionable return from sections 10/11.</p>
+      <p class="roles"><strong>Roles</strong>Remote QA Lead · Remote Operations &amp; SC Lead · Warehouse Manager</p>
+      <div class="diagram"><pre class="mermaid" data-rendered="false">
+flowchart TD
+    IN(["Critical case — from 05 Discrepancy,<br/>10 Returns, or 11 Complaints"]):::term --> IR["File Incident Report Form<br/>+ enter in Incident Tracking System"]:::crit
+    IR --> QA{"Product integrity<br/>in question?"}:::dec
+    QA -->|Yes| HOLD["QA Hold<br/>block material from storage or use"]:::crit
+    QA -->|No| ORG
+    HOLD --> ORG{"Organic item?"}:::dec
+    ORG -->|Yes| OIL["Update Organic Integrity Log<br/>+ Mass Balance<br/>protect Americert certification"]:::crit
+    ORG -->|No| RES
+    OIL --> RES["Resolve with QA / SC Lead<br/>release, return, or dispose"]:::proc
+    RES --> BACK(["&rarr; back to source section for<br/>root cause &amp; closure"]):::term
+    classDef proc fill:#ffffff,stroke:#008080,stroke-width:1.6px,color:#1e2b2b;
+    classDef dec fill:#fdf3e7,stroke:#b45309,stroke-width:1.6px,color:#5b2c05;
+    classDef crit fill:#fdeceb,stroke:#b3261e,stroke-width:1.6px,color:#7a1a15;
+    classDef term fill:#008080,stroke:#065f5f,color:#ffffff;
+      </pre></div>
+      <div class="docs"><strong>Documents</strong>
+        <ul>
+          <li><a href="https://drive.google.com/file/d/1R8Pde7fbcKHUlwu1Pz-6PYRTnh1KMU8Z/view" target="_blank" rel="noopener">Incident Report Form</a></li>
+          <li><a href="https://greciai-glez.github.io/incident-tracker/index.html" target="_blank" rel="noopener">Incident Tracking System</a></li>
+          <li><a href="https://docs.google.com/document/d/1dloV0F9X5Qmfo9BNCsPA0rGWluTYAFngLwULiJ16Ud0/edit" target="_blank" rel="noopener">Organic Compliance Training Guide</a></li>
+          <li><a href="https://drive.google.com/file/d/154je7kbJ-ATnqulcYxxCFY_KKzrTj0Xw/view" target="_blank" rel="noopener">Organic Integrity Log (Leiluna LLC)</a></li>
+          <li><a href="https://drive.google.com/file/d/1wxCqqR4_mpdubqgiZO6bmal_IhRBJ5RO/view" target="_blank" rel="noopener">OSOP 002 — Maintaining Organic Integrity</a></li>
+          <li><a href="https://drive.google.com/file/d/1E2qCQKgrEdBMHN3Q5NaJD4veP0YHqOeP/view" target="_blank" rel="noopener">Monthly Organic Mass Balance workbook</a></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 13 REPORT ============ -->
+  <section class="block" id="sec-report">
+    <header tabindex="0" role="button" aria-expanded="false">
+      <span class="num">13</span>
+      <h2>Report &amp; KPIs</h2>
+      <span class="src">Weekly SC Report · SC Weekly KPIs</span>
+      <span class="chev">&#9654;</span>
+    </header>
+    <div class="body">
+      <p class="lead">Closing the loop: weekly trends across discrepancies, incidents, complaints and returns; monthly repeat-offender review; and the KPIs that measure system health.</p>
+      <p class="roles"><strong>Roles</strong>Remote Operations &amp; SC Lead · Supply Chain Manager · all section owners feed data</p>
+      <div class="diagram"><pre class="mermaid" data-rendered="false">
+flowchart TD
+    IN(["Closed rows — 05 / 10 / 11 / 12"]):::term --> WK["Weekly SC Report<br/>by severity · total $ variance<br/>top 3 root causes · aging &gt;7 days<br/>complaint &amp; return trends"]:::proc
+    WK --> RE{"Same BOM or lot twice<br/>in 60 days?"}:::dec
+    RE -->|Yes| PA["Mandatory preventive action<br/>SOP change · label fix · training"]:::crit
+    RE -->|No| KPI
+    PA --> KPI["SC Weekly KPIs<br/>IRA &ge;95% · closed in SLA &ge;90%<br/>repeat rate &le;5%"]:::proc
+    KPI --> LOOP(["Preventive actions feed back into<br/>01 Sourcing · 02 Receiving · 04 Counts"]):::term
+    classDef proc fill:#ffffff,stroke:#008080,stroke-width:1.6px,color:#1e2b2b;
+    classDef dec fill:#fdf3e7,stroke:#b45309,stroke-width:1.6px,color:#5b2c05;
+    classDef crit fill:#fdeceb,stroke:#b3261e,stroke-width:1.6px,color:#7a1a15;
+    classDef term fill:#008080,stroke:#065f5f,color:#ffffff;
+      </pre></div>
+      <div class="docs"><strong>Documents</strong>
+        <ul>
+          <li><a href="https://docs.google.com/drawings/d/1WkbsY_vPf61ZN582OPmf9vq8MLkc72BJ7YELkjnO85A/edit" target="_blank" rel="noopener">Supply Chain Org Chart (12-30-24)</a></li>
+          <li><a href="https://drive.google.com/drive/folders/1tYA963EAxMmnHGcZg0xBJ6GsXCpoQYDF" target="_blank" rel="noopener">Job Descriptions folder</a></li>
+          <li><a href="https://drive.google.com/file/d/1-5MN3RKeziN3kPGBC6Jda9EgaIPhrZaz/view" target="_blank" rel="noopener">Weekly SC Report &amp; KPIs workbook</a></li>
+          <li><a href="https://drive.google.com/file/d/1Lc50k3dv99mlgo2_m_rT_6ra_fpPRMry/view" target="_blank" rel="noopener">SC Document Control Table (numbering &amp; roles)</a></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+  mermaid.initialize({
+    startOnLoad:false,
+    securityLevel:'loose',
+    theme:'base',
+    themeVariables:{
+      fontFamily:'"Segoe UI", system-ui, Arial, sans-serif',
+      fontSize:'13px',
+      primaryColor:'#ffffff',
+      primaryBorderColor:'#008080',
+      primaryTextColor:'#1e2b2b',
+      lineColor:'#546969',
+      edgeLabelBackground:'#f2f5f5'
+    },
+    flowchart:{curve:'basis', htmlLabels:true, useMaxWidth:true}
+  });
+
+  function renderIn(section){
+    section.querySelectorAll('.mermaid[data-rendered="false"]').forEach(function(el){
+      el.setAttribute('data-rendered','true');
+      mermaid.run({nodes:[el]});
+    });
+  }
+
+  function setOpen(section, open){
+    section.classList.toggle('open', open);
+    var h = section.querySelector('header');
+    h.setAttribute('aria-expanded', open ? 'true' : 'false');
+    if(open) renderIn(section);
+  }
+
+  window.openSection = function(id){
+    var s = document.getElementById(id);
+    if(!s) return;
+    setOpen(s, true);
+    s.scrollIntoView({behavior:'smooth', block:'start'});
+  };
+
+  document.querySelectorAll('section.block > header').forEach(function(h){
+    var s = h.parentElement;
+    h.addEventListener('click', function(){ setOpen(s, !s.classList.contains('open')); });
+    h.addEventListener('keydown', function(e){
+      if(e.key==='Enter' || e.key===' '){ e.preventDefault(); setOpen(s, !s.classList.contains('open')); }
+    });
+  });
+
+  document.getElementById('expandAll').addEventListener('click', function(){
+    document.querySelectorAll('section.block').forEach(function(s){ setOpen(s, true); });
+  });
+  document.getElementById('collapseAll').addEventListener('click', function(){
+    document.querySelectorAll('section.block').forEach(function(s){
+      if(s.id!=='sec-overview') setOpen(s, false);
+    });
+  });
+
+  renderIn(document.getElementById('sec-overview'));
+</script>
+
+
+
+
+<!-- ============ QUALITY ASSISTANT WIDGET (offline keyword search, no API/key needed) ============ -->
+<style>
+  #qa-fab{
+    position:fixed; right:22px; bottom:22px; z-index:9000;
+    background:var(--teal); color:#fff; border:none; border-radius:28px;
+    padding:13px 20px 13px 16px; font:600 13px/1 "Segoe UI",system-ui,Arial,sans-serif;
+    letter-spacing:.08em; text-transform:uppercase; cursor:pointer;
+    box-shadow:0 4px 16px rgba(6,95,95,.35); display:flex; align-items:center; gap:8px;
+  }
+  #qa-fab:hover{background:var(--teal-deep);}
+  #qa-panel{
+    position:fixed; right:22px; bottom:80px; z-index:9001;
+    width:390px; max-width:calc(100vw - 32px); height:540px; max-height:calc(100vh - 120px);
+    background:#fff; border:1px solid var(--line); border-radius:12px;
+    box-shadow:0 12px 40px rgba(6,95,95,.28); display:none; flex-direction:column; overflow:hidden;
+    font-family:"Segoe UI",system-ui,Arial,sans-serif;
+  }
+  #qa-panel.open{display:flex;}
+  .qa-head{background:var(--teal); color:#fff; padding:12px 16px; display:flex; align-items:center; gap:10px;}
+  .qa-head h3{font-size:12.5px; font-weight:600; letter-spacing:.26em; text-transform:uppercase; flex:1;}
+  .qa-head button{background:none; border:none; color:#cfe7e7; cursor:pointer; font-size:15px; padding:2px 4px;}
+  .qa-head button:hover{color:#fff;}
+  #qa-chat{flex:1; overflow-y:auto; padding:14px; background:var(--bg);}
+  .qa-msg{margin-bottom:10px; display:flex;}
+  .qa-msg.user{justify-content:flex-end;}
+  .qa-bubble{max-width:86%; padding:9px 12px; border-radius:9px; font-size:13px; line-height:1.45; white-space:pre-wrap;}
+  .qa-msg.user .qa-bubble{background:var(--teal); color:#fff; border-bottom-right-radius:3px;}
+  .qa-msg.bot .qa-bubble{background:#fff; border:1px solid var(--line); border-bottom-left-radius:3px;}
+  .qa-meta{margin-top:8px; padding-top:7px; border-top:1px dashed var(--line); font-size:11px; color:var(--ink-soft);}
+  .qa-meta .qa-tag{
+    display:inline-block; background:var(--teal-wash); color:var(--teal-deep); border:1px solid var(--teal);
+    border-radius:12px; padding:2px 9px; font-size:10.5px; font-weight:600; margin:2px 5px 2px 0;
+  }
+  .qa-meta a{color:var(--teal-deep); font-weight:600; text-decoration:none;}
+  .qa-meta .qa-contact{
+    display:inline-block; background:var(--amber-wash); color:var(--amber); border:1px dashed var(--amber);
+    border-radius:12px; padding:2px 9px; font-size:10.5px; font-weight:700; margin:2px 5px 2px 0;
+  }
+  .qa-foot{border-top:1px solid var(--line); padding:10px; display:flex; gap:8px; background:#fff;}
+  #qa-q{flex:1; border:1.5px solid var(--teal); border-radius:8px; padding:9px 11px; font:13px "Segoe UI",system-ui,Arial,sans-serif; outline:none; resize:none;}
+  #qa-send{border:none; background:var(--teal); color:#fff; border-radius:8px; padding:0 16px; font:600 12px "Segoe UI",system-ui,Arial,sans-serif; letter-spacing:.06em; cursor:pointer;}
+  .qa-starter{display:inline-block; margin:3px 3px 0 0; padding:5px 10px; font-size:11.5px; background:#fff; border:1px solid var(--teal); color:var(--teal-deep); border-radius:14px; cursor:pointer;}
+  .qa-starter:hover{background:var(--teal-wash);}
+</style>
+
+<button id="qa-fab" type="button" aria-label="Open Quality Assistant">&#128172; Quality Assistant</button>
+
+<div id="qa-panel" role="dialog" aria-label="Quality Assistant">
+  <div class="qa-head">
+    <h3>Quality Assistant</h3>
+    <button id="qa-close" type="button" title="Close">&#10005;</button>
+  </div>
+  <div id="qa-chat">
+    <div class="qa-msg bot"><div class="qa-bubble">Hi! Ask me about quality and warehouse procedures: receiving, production, organic, fulfillment, returns, complaints. I'll point you to the right SOP and stage. If I can't find it, I'll tell you to contact Quality.
+<span id="qa-starters"></span></div></div>
+  </div>
+  <div class="qa-foot">
+    <textarea id="qa-q" rows="1" placeholder="Type your question&hellip;"></textarea>
+    <button id="qa-send" type="button">Send</button>
+  </div>
+</div>
+
+<script>
+(function(){
+// Free, offline keyword-matching knowledge base. No API, no key, no server needed.
+var QA_ENTRIES = [
+{code:'SOP-011', name:'Sourcing and Procurement SOP', stage:'01 Sourcing & Procurement',
+ url:'https://drive.google.com/file/d/1nCVFdII9YBtE-YVbpW6ndmrJI963PnoQ/view',
+ kw:['supplier','po','purchase order','vendor','approved supplier','h4','coa','certificate','procurement','sourcing','buy','order material'],
+ a:'Only suppliers on the H4 Approved Supplier List may receive POs. New suppliers need a product spec, a sample COA, and (for organic) a current USDA NOP certificate before QA approves them. Every shipment must arrive with a lot number and matching COA.'},
+{code:'SOP-021', name:'Product Receiving SOP', stage:'02 Receiving & Inventory',
+ url:'https://drive.google.com/file/d/1HNcVIHyGY4oX0lvyZpLHELFpiInd9zHU/view',
+ kw:['receiving','receive','delivery','inspect','arrival','bol','quarantine','lot number','internal lot','legacy material','undocumented','packaging arrive','organic verification'],
+ a:'Inspect packaging BEFORE signing (seals, damage, pests, count vs BOL). Any failure: STOP, quarantine, photograph, notify QA. For organic material, confirm a current certificate on file and the supplier is on the H4 list; if unsure, quarantine and ask QA. Record same day with internal lot MMDDYY+letter.'},
+{code:'SOP-022', name:'Cycle Count SOP', stage:'02 Receiving & Inventory', url:'',
+ kw:['cycle count','count','monday count','actual count','physical count'],
+ a:'Monday cycle counts record Actual Count in Cycle Count Monitoring; Diff = Actual minus Theoretical. Never adjust a count to match the system — record what you actually find.'},
+{code:'SOP-023', name:'Inventory Calculation SOP', stage:'02 Receiving & Inventory', url:'',
+ kw:['theoretical','theoretical inventory','inventory calculation','baseline'],
+ a:'Theoretical quantity = receipts + production, minus usage, FO shipments, and IHF, since the last Date Counted. A new count resets the baseline.'},
+{code:'SOP-024', name:'Inventory Discrepancy Tracking and Resolution SOP', stage:'02 Receiving & Inventory',
+ url:'https://drive.google.com/file/d/14W0N-fx25Rb7vC_0d41XCI6qbHW0NUJC/view',
+ kw:['discrepancy','variance','critical','severity','root cause','recount','mislocation','adjustment','disc-'],
+ a:'Severity is by units AND dollars: within tolerance <=2% and <=$50; Low 2-5% or $50-250; Medium 5-10% or $250-1,000; High >10% or $1,000-2,500; Critical >$2,500, ANY organic item, or a suspected mix-up (always file an Incident Report). Recount within 24h by a second person.'},
+{code:'SOP-031', name:'Production Material Gathering and Staging SOP', stage:'03 Production',
+ url:'', kw:['staging','gathering','green lane','yellow lane','pick list','harvest lab','stage materials','organic lane'],
+ a:'Organic materials are gathered first and staged in the GREEN lane only; non-organic goes to the YELLOW lane and must never enter the green one. Every container is labeled with its MO, and staging must pass an independent verification before production starts.'},
+{code:'SOP-032', name:'General Production SOP', stage:'03 Production',
+ url:'https://drive.google.com/file/d/1bMtrAPhQJqiNzwRcscLnB2zo1Gt5XcR4/view',
+ kw:['bpr','batch production record','mmr','production','manufacturing','deviation','qa hold','yield','fill weight','closeout','one mo at a time'],
+ a:'The BPR must be an accurate reproduction of the product\u2019s MMR, with every component lot recorded and a verifier confirming each significant step. Any deviation is documented on the BPR at the time it happens; if product integrity is in question, apply a QA Hold and let QA disposition it.'},
+{code:'SOP-034', name:'Warehouse Manager Daily Operations and Compliance SOP', stage:'03 Production',
+ url:'https://drive.google.com/file/d/1Skwug2TiZ4Z3qY21FAiV20Tu91gCiiXw/view',
+ kw:['eod','end of day','cleaning sheet','checklist','daily warehouse report','pre-cleaning','post-cleaning','fs-004','fs-001'],
+ a:'The day is not closed until every BPR is complete and accounted for, every BPR has its cleaning sheet (pre + post, FS-001 approved agents only), and the Daily Warehouse Report is posted. Production never starts on an undocumented pre-cleaning.'},
+{code:'SOP-041', name:'Organic Traceability Verification SOP', stage:'04 QA/QC & Organic Compliance',
+ url:'https://drive.google.com/file/d/1TYQHVxhhB9vrg7LLn-dcYL06tqi3b7Pp/view',
+ kw:['traceability','trace','organic lot','supplier record'],
+ a:'Monthly, 3 random organic finished-good lots are traced back through every ingredient to the supplier record. Any break in the chain escalates to QA immediately.'},
+{code:'SOP-042', name:'Monthly Organic Mass Balance', stage:'04 QA/QC & Organic Compliance',
+ url:'https://drive.google.com/file/d/1EnO9y5KjHCslFPwkBL44mBEEhNfrwPGf/view',
+ kw:['mass balance','organic balance','received minus used','high-velocity'],
+ a:'Monthly, 3 organic raw materials (at least 1 high-velocity) are checked over a 90-day window: received minus used should match what is physically on hand. Any unexplained variance goes to QA with a corrective action.'},
+{code:'—', name:'OSOP 002 — Maintaining Organic Integrity (certifier)', stage:'04 QA/QC & Organic Compliance',
+ url:'https://drive.google.com/file/d/1wxCqqR4_mpdubqgiZO6bmal_IhRBJ5RO/view',
+ kw:['organic integrity','americert','usda nop','certifier'],
+ a:'This is the certifier-issued organic integrity SOP (Americert / USDA NOP). It governs how organic status is protected across sourcing, receiving, staging, and production.'},
+{code:'SOP-051', name:'Fulfillment and Shipping SOP v1.1', stage:'05 Fulfillment & Shipping',
+ url:'https://drive.google.com/file/d/1fGS03D9Mh54f4guvBbkjWTRIwMKQ-NIX/view',
+ kw:['no label no load','shipping','dispatch','pack','fefo','zebra zone','ready to ship','dispatch log','staging label','box','pallet','load'],
+ a:'Golden rule: NO LABEL, NO LOAD — no box enters Labeled/Ready to Ship (the Zebra Zone) or a vehicle without its ship label attached and visible. Pick by FEFO, weigh and label every box individually, and complete the Dispatch Log before loading — it\u2019s a hard stop, not a formality.'},
+{code:'SOP-061', name:'Returns SOP', stage:'06 Returns',
+ url:'https://drive.google.com/file/d/1qdwVwAZnhfZz3k5E1kJHf08DXIEGEi6P/view',
+ kw:['return','restock','fba removal','refused delivery','disposition'],
+ a:'Every return is quarantined and logged the same day. Only sealed, undamaged, in-date units may be restocked, with Warehouse Manager approval. Anything with integrity in question goes to a QA Hold and escalates — it never quietly goes back on the shelf.'},
+{code:'SOP-071', name:'Customer Service SOP (Gorgias)', stage:'07 Customer Service',
+ url:'https://drive.google.com/file/d/1NR5GqOJ6VZa8r2Okn4W8d_LjbFb5VWdz/view',
+ kw:['gorgias','complaint','customer service','adverse event','ticket','customer complaint'],
+ a:'Every product complaint gets a same-day entry in the Customer Complaints Log with the internal lot, and QA investigates before any response goes out. Adverse events (illness, injury, allergic reaction, foreign material) escalate immediately as an incident — never handled as a routine ticket.'},
+{code:'SOP-081', name:'Incident Reporting and Critical Escalation SOP', stage:'08 Escalation & Reporting',
+ url:'https://drive.google.com/file/d/1R8Pde7fbcKHUlwu1Pz-6PYRTnh1KMU8Z/view',
+ kw:['incident','escalation','incident report','qa hold placard'],
+ a:'Critical cases (discrepancy over $2,500, any organic item, suspected mix-up, adverse events, questionable returns) get an Incident Report filed and logged in the Incident Tracking System, with a QA Hold if product integrity is in question.'},
+{code:'SOP-082', name:'SC Weekly Reporting and KPIs SOP', stage:'08 Escalation & Reporting', url:'',
+ kw:['weekly report','kpi','ira','repeat rate','sla'],
+ a:'The Weekly SC Report tracks discrepancies, incidents, complaints, and returns by trend. A repeat BOM or lot within 60 days makes a preventive action mandatory. Key KPIs: IRA >=95%, closed within SLA >=90%, repeat rate <=5%.'},
+];
+
+var chat, panel, fab, input, sendBtn;
+
+function escq(t){ return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function tokenize(s){ return s.toLowerCase().replace(/[^a-z0-9\s%$.-]/g,' ').split(/\s+/).filter(Boolean); }
+
+function findAnswer(question){
+  var qTokens = tokenize(question);
+  var qText = ' ' + question.toLowerCase() + ' ';
+  var best = null, bestScore = 0;
+  QA_ENTRIES.forEach(function(entry){
+    var score = 0;
+    entry.kw.forEach(function(phrase){
+      if(qText.indexOf(phrase) !== -1){ score += phrase.split(' ').length * 2; }
+    });
+    qTokens.forEach(function(t){
+      if(t.length > 3 && entry.a.toLowerCase().indexOf(t) !== -1) score += 0.5;
+    });
+    if(score > bestScore){ bestScore = score; best = entry; }
+  });
+  if(!best || bestScore < 1.5){
+    return {answer: "I couldn't find a clear match for that in the SOPs I know. Please contact Quality (Quality Lead) directly for this one.", found:false, stage:null, sops:[]};
+  }
+  return {answer: best.a, found:true, stage: best.stage, sops:[best]};
+}
+
+function addMsg(role, htmlContent){
+  var m=document.createElement('div'); m.className='qa-msg '+role;
+  var b=document.createElement('div'); b.className='qa-bubble'; b.innerHTML=htmlContent;
+  m.appendChild(b); chat.appendChild(m);
+  chat.scrollTop = chat.scrollHeight;
+  return b;
+}
+
+function ask(){
+  var text = input.value.trim();
+  if(!text) return;
+  input.value='';
+  addMsg('user', escq(text));
+  var result = findAnswer(text);
+  var out = escq(result.answer);
+  var meta = '';
+  if(result.stage) meta += '<span class="qa-tag">Stage: '+escq(result.stage)+'</span>';
+  (result.sops||[]).forEach(function(s){
+    var label = escq((s.code && s.code !== '—' ? s.code+' \u00b7 ':'') + s.name);
+    meta += s.url ? '<span class="qa-tag"><a href="'+s.url+'" target="_blank" rel="noopener">'+label+'</a></span>'
+                  : '<span class="qa-tag">'+label+'</span>';
+  });
+  if(!result.found) meta += '<span class="qa-contact">Not found &rarr; contact Quality (Quality Lead)</span>';
+  else meta += '<span class="qa-tag" style="background:#fff;border-style:dashed;">This is a summary &mdash; see the full SOP for details</span>';
+  if(meta) out += '<div class="qa-meta">'+meta+'</div>';
+  addMsg('bot', out);
+}
+
+document.addEventListener('DOMContentLoaded', function(){
+  fab = document.getElementById('qa-fab');
+  panel = document.getElementById('qa-panel');
+  chat = document.getElementById('qa-chat');
+  input = document.getElementById('qa-q');
+  sendBtn = document.getElementById('qa-send');
+
+  var starters = ['When is a discrepancy Critical?','What is No Label, No Load?','Can I restock a customer return?','What do I do if organic material arrives without a COA?'];
+  var sdiv = document.getElementById('qa-starters');
+  starters.forEach(function(s){
+    var b = document.createElement('span'); b.className='qa-starter'; b.textContent=s;
+    b.onclick = function(){ input.value = s; ask(); };
+    sdiv.appendChild(b);
+  });
+
+  fab.addEventListener('click', function(){
+    panel.classList.toggle('open');
+    if(panel.classList.contains('open')) input.focus();
+  });
+  document.getElementById('qa-close').addEventListener('click', function(){ panel.classList.remove('open'); });
+  sendBtn.addEventListener('click', ask);
+  input.addEventListener('keydown', function(e){
+    if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); ask(); }
+  });
+});
+})();
+</script>
+
+</body>
+</html>
